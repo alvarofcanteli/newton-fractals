@@ -1,8 +1,10 @@
 """Müller in E7: effect of delta on the complex64 / complex128 difference and distance of
 the pixels that differ to the boundaries.
 
-Generates figures/e7_diff_muller.png (delta = 1e-3).
+Generates results/e7b_muller_delta.csv (one row per delta) and
+figures/e7_diff_muller.png (delta = 1e-3).
 """
+import csv
 import sys
 from pathlib import Path
 
@@ -23,6 +25,7 @@ from nfractals.runner import CONVERGED, run_basins  # noqa: E402
 
 N = 1000
 TOL = {np.complex64: 1e-5, np.complex128: 1e-10}
+RADII = (3, 10, 20)  # boundary distances (in pixels) reported in the CSV
 
 # Same grid as in E7: once in complex128, rounded to complex64 and converted back to complex128.
 x = np.linspace(-2, 2, N)
@@ -68,6 +71,15 @@ def run(delta):
     return out
 
 
+columns = ["delta", "tol complex64", "tol complex128",
+           "root differs (% of all)", "root differs (pixels)", "converged in only one (pixels)",
+           "converged complex64 (%)", "converged complex128 (%)",
+           "mean iter complex64", "mean iter complex128"]
+for r in RADII:
+    columns += [f"near boundary <={r} px: % of those that differ",
+                f"near boundary <={r} px: % of all pixels"]
+rows = []
+
 for delta in (1e-1, 1e-2, 1e-3):
     o = run(delta)
     r64, i64, s64 = o[np.complex64]
@@ -79,11 +91,16 @@ for delta in (1e-1, 1e-2, 1e-3):
           f"converged in only one: {only.sum()} px; conv. c64 {100 * c64.mean():.3f}%, "
           f"c128 {100 * c128.mean():.3f}%; mean iter c64 {i64[c64].mean():.3f}, "
           f"c128 {i128[c128].mean():.3f}")
-    radii = (3,) if delta != 1e-3 else (3, 10, 20)
-    for r in radii:
+    row = [delta, TOL[np.complex64], TOL[np.complex128],
+           round(100 * diff.mean(), 4), int(diff.sum()), int(only.sum()),
+           round(100 * c64.mean(), 3), round(100 * c128.mean(), 3),
+           round(i64[c64].mean(), 3), round(i128[c128].mean(), 3)]
+    for r in RADII:
         fr = near(r128, c128, r)
         pct = 100 * fr[diff].mean() if diff.any() else float("nan")
         print(f"   ≤{r} px: {pct:.2f}% of those that differ; {100 * fr.mean():.2f}% of all pixels")
+        row += [round(pct, 2), round(100 * fr.mean(), 2)]
+    rows.append(row)
     if delta == 1e-3:
         fr3 = near(r128, c128, 3)
         pixel_map = np.zeros(r128.shape, np.uint8)
@@ -99,4 +116,12 @@ for delta in (1e-1, 1e-2, 1e-3):
                      fontsize=10)
         output = PROJECT_ROOT / "figures" / "e7_diff_muller.png"
         fig.savefig(output, dpi=110, bbox_inches="tight")
+        plt.close(fig)
         print(f"Figure saved to {output}")
+
+output = PROJECT_ROOT / "results" / "e7b_muller_delta.csv"
+with open(output, "w", newline="", encoding="utf-8") as fh:
+    w = csv.writer(fh)
+    w.writerow(columns)
+    w.writerows(rows)
+print(f"\nTable saved to {output}")
