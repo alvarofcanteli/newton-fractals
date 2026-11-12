@@ -108,7 +108,7 @@ Müller. Each root has its own colour (red, green, blue) and the brightness drop
 increase; black marks the points that do not converge. The boundaries of Newton and damped Newton are
 fractal, with islands of another colour. Halley's are smoother with fewer islands. The secant method
 shows wide fractal bands along the boundaries, with black zones (not converged), mostly near the
-centre. Müller's boundaries are almost straight, with three sectors, and only small details appear
+centre. Müller's boundaries appear almost straight, with three sectors, and only small details appear
 at the edges of the window.*
 
 ![Damped Newton: mean iterations and boundary fraction versus h](figures/e6_curves.png)
@@ -125,7 +125,7 @@ The real root (−1.769) takes the left zone in red and the two complex roots th
 blue. Newton has black discs of points that do not converge: the largest is around z = 0, on the real
 axis, and there are smaller ones scattered off the axis (points that Newton sends to the zone trapped
 by the 0 ↔ 1 cycle). Halley and damped Newton have no black points. The secant method only shows a
-small black spot next to the real axis. Müller has smoother, rounder boundaries.*
+small black spot next to the real axis. Müller's boundaries appear smoother and rounder.*
 
 ## Main findings
 
