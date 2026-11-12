@@ -9,7 +9,7 @@ import numpy as np  # noqa: E402
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-RAIZ_PROYECTO = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import (  # noqa: E402
     halley_step,
@@ -22,71 +22,70 @@ from nfractals.methods import (  # noqa: E402
 from nfractals.plotting import plot_basins  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
 from nfractals.runner import (  # noqa: E402
-    ACTIVO,
-    CONVERGIDO,
-    FALLO,
-    NO_CONVERGE,
+    ACTIVE,
+    CONVERGED,
+    FAILED,
+    NOT_CONVERGED,
     run_basins,
-    un_punto,
+    single_point,
 )
 
 N = 1000
 TOL = 1e-10
-H_AMORTIGUADO = 0.7
+H_DAMPED = 0.7
 
 f, df, d2f, roots = make_polynomial(POLYNOMIALS["z^3 - 1"])
 
 x = np.linspace(-2, 2, N)
 z0 = x[None, :] + 1j * x[:, None]
 
-# (nombre, step, max_iter, init); init=None -> estado (z0,)
-metodos = [
-    ("Newton", un_punto(lambda z: newton_step(z, f, df)), 50, None),
-    ("Halley", un_punto(lambda z: halley_step(z, f, df, d2f)), 50, None),
-    (f"Newton amortiguado (h={H_AMORTIGUADO})",
-     un_punto(lambda z: newton_step(z, f, df, h=H_AMORTIGUADO)), 200, None),
-    ("Secante", lambda s: secant_step(s, f), 100, secant_init(z0)),
+# (name, step, max_iter, init); init=None -> state (z0,)
+methods = [
+    ("Newton", single_point(lambda z: newton_step(z, f, df)), 50, None),
+    ("Halley", single_point(lambda z: halley_step(z, f, df, d2f)), 50, None),
+    (f"Damped Newton (h={H_DAMPED})",
+     single_point(lambda z: newton_step(z, f, df, h=H_DAMPED)), 200, None),
+    ("Secant", lambda s: secant_step(s, f), 100, secant_init(z0)),
     ("Müller", lambda s: muller_step(s, f), 100, muller_init(z0)),
 ]
 
-NOMBRES_ESTADO = {
-    ACTIVO: "activo",
-    CONVERGIDO: "convergido",
-    FALLO: "fallo",
-    NO_CONVERGE: "no converge",
+STATUS_NAMES = {
+    ACTIVE: "active",
+    CONVERGED: "converged",
+    FAILED: "failed",
+    NOT_CONVERGED: "not converged",
 }
 
-fig, axes = plt.subplots(1, len(metodos), figsize=(6 * len(metodos), 6), constrained_layout=True
-)
+fig, axes = plt.subplots(1, len(methods), figsize=(6 * len(methods), 6), constrained_layout=True)
 
-resultados = [
+results = [
     run_basins(z0, step, f, roots, TOL, max_iter, init=init)
-    for _, step, max_iter, init in metodos
+    for _, step, max_iter, init in methods
 ]
 
-# iter_ref común: percentil 99 de las iteraciones de los convergidos de todos los métodos juntos.
+# Common iter_ref: 99th percentile of the iterations of the converged points of all methods together.
 iter_ref = np.percentile(
-    np.concatenate([it[est == CONVERGIDO] for _, it, est in resultados]), 99
+    np.concatenate([it[st == CONVERGED] for _, it, st in results]), 99
 )
-print(f"iter_ref común (percentil 99): {iter_ref:.2f}")
+print(f"Common iter_ref (99th percentile): {iter_ref:.2f}")
 
-for ax, (nombre, _, max_iter, _), (raiz, iters, estado) in zip(axes, metodos, resultados):
-    plot_basins(raiz, iters, estado, len(roots), ax=ax, iter_ref=iter_ref)
-    ax.set_title(f"{nombre}, max_iter={max_iter}")
+for ax, (name, _, max_iter, _), (root, iters, status) in zip(axes, methods, results):
+    plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
+    ax.set_title(f"{name}, max_iter={max_iter}")
 
-    conv = estado == CONVERGIDO
-    print(f"\n== {nombre} (max_iter={max_iter}) ==")
-    print("Por raíz (% de los puntos totales):")
+    conv = status == CONVERGED
+    print(f"\n== {name} (max_iter={max_iter}) ==")
+    print("By root (% of all points):")
     for k, r in enumerate(roots):
-        print(f"  Raíz {k} ({r.real:+.4f}{r.imag:+.4f}j): {np.mean(raiz == k):.2%}")
-    print("Por estado (% de los puntos totales):")
-    for codigo, texto in NOMBRES_ESTADO.items():
-        print(f"  {texto}: {np.mean(estado == codigo):.2%}")
+        print(f"  Root {k} ({r.real:+.4f}{r.imag:+.4f}j): {np.mean(root == k):.2%}")
+    print("By status (% of all points):")
+    for code, text in STATUS_NAMES.items():
+        print(f"  {text}: {np.mean(status == code):.2%}")
     if conv.any():
-        print(f"Iteraciones medias (convergidos): {iters[conv].mean():.3f}")
+        print(f"Mean iterations (converged): {iters[conv].mean():.3f}")
     else:
-        print("Iteraciones medias (convergidos): n/a")
+        print("Mean iterations (converged): n/a")
 
-salida = RAIZ_PROYECTO / "figures" / "e0_compare.png"
-fig.savefig(salida, dpi=100, bbox_inches="tight")
-print(f"\nFigura guardada en {salida}")
+output = PROJECT_ROOT / "figures" / "e0_compare.png"
+fig.savefig(output, dpi=100, bbox_inches="tight")
+print(f"\nFigure saved to {output}")

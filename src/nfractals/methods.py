@@ -2,11 +2,11 @@ import numpy as np
 
 
 def newton_step(z, f, df, h=1.0):
-    """Un paso de Newton: z - h * f(z) / df(z). Con h < 1 es Newton amortiguado.
+    """One Newton step: z - h * f(z) / df(z). With h < 1 it is damped Newton.
 
-    Si z es complex64 o complex128 conserva su dtype; cualquier otro tipo
-    (entero o real) se convierte a complex128. Donde df(z) = 0 deja inf o
-    NaN, sin avisos.
+    If z is complex64 or complex128 its dtype is kept; any other type
+    (integer or real) is converted to complex128. Where df(z) = 0 the result
+    is inf or NaN, without warnings.
     """
     z = np.asarray(z)
     if z.dtype not in (np.complex64, np.complex128):
@@ -17,9 +17,9 @@ def newton_step(z, f, df, h=1.0):
 
 
 def halley_step(z, f, df, d2f):
-    """Un paso de Halley: z - 2 f df / (2 df^2 - f d2f).
+    """One Halley step: z - 2 f df / (2 df^2 - f d2f).
 
-    Misma gestión de dtype y de divisiones por cero que newton_step.
+    Same dtype handling and division-by-zero behaviour as newton_step.
     """
     z = np.asarray(z)
     if z.dtype not in (np.complex64, np.complex128):
@@ -31,7 +31,7 @@ def halley_step(z, f, df, d2f):
     return out.astype(z.dtype, copy=False)
 
 
-def _a_complejo(z):
+def _to_complex(z):
     z = np.asarray(z)
     if z.dtype not in (np.complex64, np.complex128):
         z = z.astype(np.complex128)
@@ -39,40 +39,41 @@ def _a_complejo(z):
 
 
 def secant_init(z0, delta=1e-3):
-    """Estado inicial de la secante: (z0 + delta, z0) = (z_anterior, z)."""
-    z0 = _a_complejo(z0)
+    """Initial state of the secant method: (z0 + delta, z0) = (z_prev, z)."""
+    z0 = _to_complex(z0)
     return (z0 + z0.dtype.type(delta), z0)
 
 
-def secant_step(estado, f):
-    """Un paso de la secante: de (z_anterior, z) a (z, z_nuevo), con
-    z_nuevo = z - f(z) (z - z_anterior) / (f(z) - f(z_anterior)).
+def secant_step(state, f):
+    """One secant step: from (z_prev, z) to (z, z_new), with
+    z_new = z - f(z) (z - z_prev) / (f(z) - f(z_prev)).
 
-    Misma gestión de dtype que newton_step. Donde f(z) == f(z_anterior) deja
-    inf o NaN, sin avisos.
+    Same dtype handling as newton_step. Where f(z) == f(z_prev) the result is
+    inf or NaN, without warnings.
     """
-    z_ant, z = (_a_complejo(a) for a in estado)
+    z_prev, z = (_to_complex(a) for a in state)
     with np.errstate(all="ignore"):
         fz = f(z)
-        out = z - fz * (z - z_ant) / (fz - f(z_ant))
+        out = z - fz * (z - z_prev) / (fz - f(z_prev))
     return (z, out.astype(z.dtype, copy=False))
 
 
 def muller_init(z0, delta=1e-3):
-    """Estado inicial de Müller: (z0, z0 + delta, z0 + 2 delta) = (z_{k-2}, z_{k-1}, z_k)."""
-    z0 = _a_complejo(z0)
+    """Initial state of Muller's method: (z0, z0 + delta, z0 + 2 delta) = (z_{k-2}, z_{k-1}, z_k)."""
+    z0 = _to_complex(z0)
     d = z0.dtype.type(delta)
     return (z0, z0 + d, z0 + 2 * d)
 
 
-def muller_step(estado, f):
-    """Un paso de Müller: de (z_{k-2}, z_{k-1}, z_k) a (z_{k-1}, z_k, z_{k+1}).
+def muller_step(state, f):
+    """One Muller step: from (z_{k-2}, z_{k-1}, z_k) to (z_{k-1}, z_k, z_{k+1}).
 
-    Parábola por los tres puntos; z_{k+1} = z_k - 2c / (b ± sqrt(b^2 - 4ac)),
-    con el signo que da el denominador de mayor módulo. Misma gestión de dtype
-    y de divisiones por cero que newton_step (inf o NaN, sin avisos).
+    Parabola through the three points; z_{k+1} = z_k - 2c / (b ± sqrt(b^2 - 4ac)),
+    with the sign that gives the denominator of larger modulus. Same dtype
+    handling and division-by-zero behaviour as newton_step (inf or NaN, without
+    warnings).
     """
-    z2, z1, z0 = (_a_complejo(a) for a in estado)
+    z2, z1, z0 = (_to_complex(a) for a in state)
     with np.errstate(all="ignore"):
         f2, f1, c = f(z2), f(z1), f(z0)
         h1 = z1 - z2
@@ -81,9 +82,9 @@ def muller_step(estado, f):
         d2 = (c - f1) / h2
         a = (d2 - d1) / (h2 + h1)
         b = a * h2 + d2
-        raiz = np.sqrt(b * b - 4 * a * c)
-        den_mas = b + raiz
-        den_menos = b - raiz
-        den = np.where(np.abs(den_mas) >= np.abs(den_menos), den_mas, den_menos)
+        sq = np.sqrt(b * b - 4 * a * c)
+        den_plus = b + sq
+        den_minus = b - sq
+        den = np.where(np.abs(den_plus) >= np.abs(den_minus), den_plus, den_minus)
         out = z0 - 2 * c / den
     return (z1, z0, out.astype(z0.dtype, copy=False))

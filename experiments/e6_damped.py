@@ -10,128 +10,129 @@ import numpy as np  # noqa: E402
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-RAIZ_PROYECTO = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import newton_step  # noqa: E402
 from nfractals.plotting import plot_basins  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial, unique_roots  # noqa: E402
-from nfractals.runner import CONVERGIDO, FALLO, NO_CONVERGE, run_basins, un_punto  # noqa: E402
+from nfractals.runner import CONVERGED, FAILED, NOT_CONVERGED, run_basins, single_point  # noqa: E402
 
 N = 1000
 TOL = 1e-10
 MAX_ITER = 300
-COSTE = 2  # evaluaciones por paso (f y f')
+COST = 2  # evaluations per step (f and f')
 HS = [0.3, 0.5, 0.7, 0.9, 1.0]
-POLINOMIOS = [("z^3 - 1", "z3_menos_1"), ("z^3 - 2z + 2", "z3_menos_2z_mas_2")]
+POLYS = [("z^3 - 1", "z3_minus_1"), ("z^3 - 2z + 2", "z3_minus_2z_plus_2")]
 
 x = np.linspace(-2, 2, N)
 z0 = x[None, :] + 1j * x[:, None]
 
 
-def fraccion_frontera(raiz, estado):
-    """Fracción de píxeles convergidos con algún vecino (4-conectividad) convergido
-    a otra raíz. Los pares en que algún píxel no converge no cuentan."""
-    ok = estado == CONVERGIDO
-    marca = np.zeros(raiz.shape, dtype=bool)
-    # Vecinos verticales.
-    d = ok[1:, :] & ok[:-1, :] & (raiz[1:, :] != raiz[:-1, :])
-    marca[1:, :] |= d
-    marca[:-1, :] |= d
-    # Vecinos horizontales.
-    d = ok[:, 1:] & ok[:, :-1] & (raiz[:, 1:] != raiz[:, :-1])
-    marca[:, 1:] |= d
-    marca[:, :-1] |= d
-    return marca.mean()  # sobre todos los píxeles de la malla
+def boundary_fraction(root, status):
+    """Fraction of grid pixels that are converged and have some converged neighbour
+    (4-connectivity) with another root. Pairs in which some pixel does not converge
+    do not count."""
+    ok = status == CONVERGED
+    mark = np.zeros(root.shape, dtype=bool)
+    # Vertical neighbours.
+    d = ok[1:, :] & ok[:-1, :] & (root[1:, :] != root[:-1, :])
+    mark[1:, :] |= d
+    mark[:-1, :] |= d
+    # Horizontal neighbours.
+    d = ok[:, 1:] & ok[:, :-1] & (root[:, 1:] != root[:, :-1])
+    mark[:, 1:] |= d
+    mark[:, :-1] |= d
+    return mark.mean()  # over all pixels of the grid
 
 
-def etiqueta(r):
+def label(r):
     re = round(r.real, 3) + 0.0
     im = round(r.imag, 3) + 0.0
     return f"{re:g}" if im == 0 else f"{re:g}{im:+g}j"
 
 
-MAX_RAICES = 3
-columnas = (
-    ["polinomio", "h", "max_iter", "iter media", "iter mediana", "evals media",
-     "no converge (%)", "fallo (%)", "frontera (%)", "raices"]
-    + [f"raiz {k + 1} (%)" for k in range(MAX_RAICES)]
+MAX_ROOTS = 3
+columns = (
+    ["polynomial", "h", "max_iter", "mean iter", "median iter", "mean evals",
+     "not converged (%)", "failed (%)", "boundary (%)", "roots"]
+    + [f"root {k + 1} (%)" for k in range(MAX_ROOTS)]
 )
-filas = []
-curvas = {}
+rows = []
+curves = {}
 
-print(f"Frontera: fracción de píxeles de la malla convergidos que tienen algún vecino "
-      f"(4-conectividad) convergido a otra raíz. tol={TOL:g}, max_iter={MAX_ITER}, "
-      f"coste {COSTE} evals/paso.")
+print(f"Boundary: fraction of grid pixels that are converged and have some converged neighbour "
+      f"(4-connectivity) with another root. tol={TOL:g}, max_iter={MAX_ITER}, "
+      f"cost {COST} evals/step.")
 
-for nombre_pol, archivo in POLINOMIOS:
-    f, df, d2f, r = make_polynomial(POLYNOMIALS[nombre_pol])
+for poly_name, file_name in POLYS:
+    f, df, d2f, r = make_polynomial(POLYNOMIALS[poly_name])
     roots = unique_roots(r)
-    etiquetas = [etiqueta(q) for q in roots]
-    print(f"\n### {nombre_pol}: raíces {', '.join(etiquetas)}", flush=True)
+    labels = [label(q) for q in roots]
+    print(f"\n### {poly_name}: roots {', '.join(labels)}", flush=True)
 
-    resultados = []
+    results = []
     for h in HS:
-        resultados.append(run_basins(
-            z0, un_punto(lambda z, h=h: newton_step(z, f, df, h=h)),
+        results.append(run_basins(
+            z0, single_point(lambda z, h=h: newton_step(z, f, df, h=h)),
             f, roots, TOL, MAX_ITER,
         ))
 
-    iter_conv = np.concatenate([it[est == CONVERGIDO] for _, it, est in resultados])
+    iter_conv = np.concatenate([it[st == CONVERGED] for _, it, st in results])
     iter_ref = np.percentile(iter_conv, 99)
 
-    medias, fronteras = [], []
-    for h, (raiz, iters, estado) in zip(HS, resultados):
-        conv = estado == CONVERGIDO
+    means, boundaries = [], []
+    for h, (root, iters, status) in zip(HS, results):
+        conv = status == CONVERGED
         it = iters[conv]
-        it_media, it_med = float(it.mean()), float(np.median(it))
-        pct_raiz = [100 * np.mean(raiz == k) for k in range(len(roots))]
-        p_nc = 100 * np.mean(estado == NO_CONVERGE)
-        p_fallo = 100 * np.mean(estado == FALLO)
-        fr = 100 * fraccion_frontera(raiz, estado)
-        medias.append(it_media)
-        fronteras.append(fr)
-        filas.append(
-            [nombre_pol, h, MAX_ITER, round(it_media, 3), round(it_med, 3),
-             round(it_media * COSTE, 3), round(p_nc, 4), round(p_fallo, 4), round(fr, 4),
-             " | ".join(etiquetas)]
-            + [round(float(p), 4) for p in pct_raiz]
-            + [""] * (MAX_RAICES - len(roots))
+        it_mean, it_med = float(it.mean()), float(np.median(it))
+        pct_root = [100 * np.mean(root == k) for k in range(len(roots))]
+        p_nc = 100 * np.mean(status == NOT_CONVERGED)
+        p_failed = 100 * np.mean(status == FAILED)
+        fr = 100 * boundary_fraction(root, status)
+        means.append(it_mean)
+        boundaries.append(fr)
+        rows.append(
+            [poly_name, h, MAX_ITER, round(it_mean, 3), round(it_med, 3),
+             round(it_mean * COST, 3), round(p_nc, 4), round(p_failed, 4), round(fr, 4),
+             " | ".join(labels)]
+            + [round(float(p), 4) for p in pct_root]
+            + [""] * (MAX_ROOTS - len(roots))
         )
-        por_raiz = ", ".join(f"{e}: {p:.2f}%" for e, p in zip(etiquetas, pct_raiz))
-        print(f"- {nombre_pol} | h={h:g}: iter media {it_media:.3f}, mediana {it_med:.1f}, "
-              f"evals media {it_media * COSTE:.3f}; no converge {p_nc:.2f}%, fallo {p_fallo:.2f}%; "
-              f"frontera {fr:.2f}%; por raíz: {por_raiz}", flush=True)
-    curvas[nombre_pol] = (medias, fronteras)
+        by_root = ", ".join(f"{e}: {p:.2f}%" for e, p in zip(labels, pct_root))
+        print(f"- {poly_name} | h={h:g}: mean iter {it_mean:.3f}, median {it_med:.1f}, "
+              f"mean evals {it_mean * COST:.3f}; not converged {p_nc:.2f}%, failed {p_failed:.2f}%; "
+              f"boundary {fr:.2f}%; by root: {by_root}", flush=True)
+    curves[poly_name] = (means, boundaries)
 
     fig, axes = plt.subplots(1, len(HS), figsize=(5 * len(HS), 5.4), constrained_layout=True)
-    for ax, h, (raiz, iters, estado) in zip(axes, HS, resultados):
-        plot_basins(raiz, iters, estado, len(roots), ax=ax, iter_ref=iter_ref)
+    for ax, h, (root, iters, status) in zip(axes, HS, results):
+        plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
         ax.set_title(f"h = {h:g}", fontsize=10)
-    fig.suptitle(f"Newton amortiguado en {nombre_pol} (tol={TOL:g}, max_iter={MAX_ITER}, "
+    fig.suptitle(f"Damped Newton on {poly_name} (tol={TOL:g}, max_iter={MAX_ITER}, "
                  f"iter_ref={iter_ref:.1f})")
-    salida_fig = RAIZ_PROYECTO / "figures" / f"e6_maps_{archivo}.png"
-    fig.savefig(salida_fig, dpi=100, bbox_inches="tight")
+    output_fig = PROJECT_ROOT / "figures" / f"e6_maps_{file_name}.png"
+    fig.savefig(output_fig, dpi=100, bbox_inches="tight")
     plt.close(fig)
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5), constrained_layout=True)
-for nombre_pol, (medias, fronteras) in curvas.items():
-    ax1.plot(HS, medias, marker="o", label=nombre_pol)
-    ax2.plot(HS, fronteras, marker="o", label=nombre_pol)
+for poly_name, (means, boundaries) in curves.items():
+    ax1.plot(HS, means, marker="o", label=poly_name)
+    ax2.plot(HS, boundaries, marker="o", label=poly_name)
 ax1.set_xlabel("h")
-ax1.set_ylabel("iteraciones medias (convergidos)")
+ax1.set_ylabel("mean iterations (converged)")
 ax2.set_xlabel("h")
-ax2.set_ylabel("fracción de frontera (%)")
+ax2.set_ylabel("boundary fraction (%)")
 for ax in (ax1, ax2):
     ax.set_xticks(HS)
     ax.grid(alpha=0.3)
     ax.legend()
-salida_curvas = RAIZ_PROYECTO / "figures" / "e6_curves.png"
-fig.savefig(salida_curvas, dpi=100, bbox_inches="tight")
+output_curves = PROJECT_ROOT / "figures" / "e6_curves.png"
+fig.savefig(output_curves, dpi=100, bbox_inches="tight")
 plt.close(fig)
 
-salida = RAIZ_PROYECTO / "results" / "e6_damped.csv"
-with open(salida, "w", newline="", encoding="utf-8") as fh:
+output = PROJECT_ROOT / "results" / "e6_damped.csv"
+with open(output, "w", newline="", encoding="utf-8") as fh:
     w = csv.writer(fh)
-    w.writerow(columnas)
-    w.writerows(filas)
-print(f"\nTabla guardada en {salida}")
+    w.writerow(columns)
+    w.writerows(rows)
+print(f"\nTable saved to {output}")

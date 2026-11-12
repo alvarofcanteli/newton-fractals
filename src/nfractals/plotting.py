@@ -1,39 +1,39 @@
 import numpy as np
 from matplotlib.colors import hsv_to_rgb
 
-from nfractals.runner import CONVERGIDO
+from nfractals.runner import CONVERGED
 
-# Brillo mínimo de un punto convergido (el negro puro se reserva a los que no convergen).
-BRILLO_MIN = 0.35
+# Minimum brightness of a converged point (pure black is reserved for points that do not converge).
+MIN_BRIGHTNESS = 0.35
 
 
-def plot_basins(raiz, iters, estado, n_raices, ax=None, iter_ref=None):
-    """Devuelve una imagen RGB (alto, ancho, 3) de las cuencas.
+def plot_basins(root, iters, status, n_roots, ax=None, iter_ref=None):
+    """Return an RGB image (height, width, 3) of the basins.
 
-    Matiz: según la raíz (equiespaciado en el círculo cromático).
-    Brillo: baja con el log de las iteraciones, de 1 (1 iteración) a
-    BRILLO_MIN (iter_ref iteraciones o más, recortando por encima); más
-    oscuro = más iteraciones. Si no se pasa `iter_ref`, se usa el percentil 99
-    de las iteraciones de los puntos convergidos de este mapa.
-    Negro: puntos con estado distinto de CONVERGIDO.
-    Si se pasa `ax`, la imagen también se dibuja en él.
+    Hue: according to the root (evenly spaced on the colour wheel).
+    Brightness: decreases with the log of the iterations, from 1 (1 iteration) to
+    MIN_BRIGHTNESS (iter_ref iterations or more, clipped above); darker = more
+    iterations. If `iter_ref` is not given, the 99th percentile of the iterations
+    of the converged points of this map is used.
+    Black: points whose status is not CONVERGED.
+    If `ax` is given, the image is also drawn on it.
     """
-    conv = estado == CONVERGIDO
+    conv = status == CONVERGED
 
-    matiz = np.where(conv, raiz, 0) / n_raices
-    brillo = np.ones(raiz.shape)
+    hue = np.where(conv, root, 0) / n_roots
+    brightness = np.ones(root.shape)
     if conv.any():
         it = iters[conv].astype(float)
         if iter_ref is None:
             iter_ref = np.percentile(it, 99)
-        # Escala logarítmica: 1 iteración -> rel 0 (brillo 1); iter_ref o más -> rel 1.
+        # Logarithmic scale: 1 iteration -> rel 0 (brightness 1); iter_ref or more -> rel 1.
         if iter_ref > 1:
             rel = np.clip(np.log(it) / np.log(iter_ref), 0.0, 1.0)
         else:
             rel = np.zeros_like(it)
-        brillo[conv] = 1.0 - (1.0 - BRILLO_MIN) * rel
+        brightness[conv] = 1.0 - (1.0 - MIN_BRIGHTNESS) * rel
 
-    hsv = np.stack([matiz, np.ones(raiz.shape), brillo], axis=-1)
+    hsv = np.stack([hue, np.ones(root.shape), brightness], axis=-1)
     img = hsv_to_rgb(hsv)
     img[~conv] = 0.0
 

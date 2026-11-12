@@ -10,7 +10,7 @@ import numpy as np  # noqa: E402
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-RAIZ_PROYECTO = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import (  # noqa: E402
     halley_step,
@@ -22,94 +22,100 @@ from nfractals.methods import (  # noqa: E402
 )
 from nfractals.plotting import plot_basins  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
-from nfractals.runner import CONVERGIDO, FALLO, NO_CONVERGE, run_basins, un_punto  # noqa: E402
+from nfractals.runner import (  # noqa: E402
+    CONVERGED,
+    FAILED,
+    NOT_CONVERGED,
+    run_basins,
+    single_point,
+)
 
 N = 1000
 TOL = 1e-10
-H_AMORTIGUADO = 0.7
+H_DAMPED = 0.7
 DELTA = 1e-3
-RADIO = 0.2
+RADIUS = 0.2
 
 f, df, d2f, roots = make_polynomial(POLYNOMIALS["z^3 - 2z + 2"])
 
 x = np.linspace(-2, 2, N)
 z0 = x[None, :] + 1j * x[:, None]
-disco_0 = np.abs(z0 - 0) < RADIO
-disco_1 = np.abs(z0 - 1) < RADIO
+disk_0 = np.abs(z0 - 0) < RADIUS
+disk_1 = np.abs(z0 - 1) < RADIUS
 
-# (nombre, paso, max_iter, estado inicial; None -> (z0,))
-metodos = [
-    ("Newton", un_punto(lambda z: newton_step(z, f, df)), 50, None),
-    ("Halley", un_punto(lambda z: halley_step(z, f, df, d2f)), 50, None),
-    (f"Newton amortiguado (h={H_AMORTIGUADO})",
-     un_punto(lambda z: newton_step(z, f, df, h=H_AMORTIGUADO)), 200, None),
-    ("Secante", lambda s: secant_step(s, f), 100, secant_init(z0, DELTA)),
+# (name, step, max_iter, initial state; None -> (z0,))
+methods = [
+    ("Newton", single_point(lambda z: newton_step(z, f, df)), 50, None),
+    ("Halley", single_point(lambda z: halley_step(z, f, df, d2f)), 50, None),
+    (f"Damped Newton (h={H_DAMPED})",
+     single_point(lambda z: newton_step(z, f, df, h=H_DAMPED)), 200, None),
+    ("Secant", lambda s: secant_step(s, f), 100, secant_init(z0, DELTA)),
     ("Müller", lambda s: muller_step(s, f), 100, muller_init(z0, DELTA)),
 ]
 
-resultados = [
+results = [
     run_basins(z0, step, f, roots, TOL, max_iter, init=init)
-    for _, step, max_iter, init in metodos
+    for _, step, max_iter, init in methods
 ]
 
-columnas = [
-    "metodo",
+columns = [
+    "method",
     "max_iter",
-    "convergido (%)",
-    "no converge (%)",
-    "fallo (%)",
-    f"no converge en disco r={RADIO} centro 0 (%)",
-    f"no converge en disco r={RADIO} centro 1 (%)",
+    "converged (%)",
+    "not converged (%)",
+    "failed (%)",
+    f"not converged in disk r={RADIUS} centre 0 (%)",
+    f"not converged in disk r={RADIUS} centre 1 (%)",
 ]
 
-filas = []
-for i, ((nombre, _, max_iter, _), (_, _, estado)) in enumerate(zip(metodos, resultados)):
-    fila = [
-        nombre,
+rows = []
+for i, ((name, _, max_iter, _), (_, _, status)) in enumerate(zip(methods, results)):
+    row = [
+        name,
         max_iter,
-        round(float(100 * np.mean(estado == CONVERGIDO)), 4),
-        round(float(100 * np.mean(estado == NO_CONVERGE)), 4),
-        round(float(100 * np.mean(estado == FALLO)), 4),
+        round(float(100 * np.mean(status == CONVERGED)), 4),
+        round(float(100 * np.mean(status == NOT_CONVERGED)), 4),
+        round(float(100 * np.mean(status == FAILED)), 4),
     ]
-    if nombre == "Newton":
-        for disco in (disco_0, disco_1):
-            fila.append(round(float(100 * np.mean(estado[disco] == NO_CONVERGE)), 4))
+    if name == "Newton":
+        for disk in (disk_0, disk_1):
+            row.append(round(float(100 * np.mean(status[disk] == NOT_CONVERGED)), 4))
     else:
-        fila += ["", ""]
-    filas.append(fila)
+        row += ["", ""]
+    rows.append(row)
 
-# Tabla en pantalla.
-textos = [
-    [("-" if c == "" else f"{c:.2f}" if isinstance(c, float) else str(c)) for c in fila]
-    for fila in filas
+# On-screen table.
+texts = [
+    [("-" if c == "" else f"{c:.2f}" if isinstance(c, float) else str(c)) for c in row]
+    for row in rows
 ]
-anchos = [max(len(columnas[i]), *(len(t[i]) for t in textos)) for i in range(len(columnas))]
-alinear = lambda fila: "  ".join(
-    c.ljust(anchos[i]) if i == 0 else c.rjust(anchos[i]) for i, c in enumerate(fila)
+widths = [max(len(columns[i]), *(len(t[i]) for t in texts)) for i in range(len(columns))]
+align = lambda row: "  ".join(
+    c.ljust(widths[i]) if i == 0 else c.rjust(widths[i]) for i, c in enumerate(row)
 )
-print(alinear(columnas))
-print("  ".join("-" * a for a in anchos))
-for t in textos:
-    print(alinear(t))
+print(align(columns))
+print("  ".join("-" * w for w in widths))
+for t in texts:
+    print(align(t))
 
 # CSV.
-salida_csv = RAIZ_PROYECTO / "results" / "e3_failures.csv"
-with open(salida_csv, "w", newline="", encoding="utf-8") as fh:
+output_csv = PROJECT_ROOT / "results" / "e3_failures.csv"
+with open(output_csv, "w", newline="", encoding="utf-8") as fh:
     w = csv.writer(fh)
-    w.writerow(columnas)
-    w.writerows(filas)
-print(f"\nTabla guardada en {salida_csv}")
+    w.writerow(columns)
+    w.writerows(rows)
+print(f"\nTable saved to {output_csv}")
 
-# Figura: un mapa por método con iter_ref común (percentil 99 de los convergidos de todos).
-iter_conv = np.concatenate([it[est == CONVERGIDO] for _, it, est in resultados])
+# Figure: one map per method with a common iter_ref (99th percentile of the converged points of all).
+iter_conv = np.concatenate([it[st == CONVERGED] for _, it, st in results])
 iter_ref = np.percentile(iter_conv, 99) if iter_conv.size else None
-print(f"iter_ref común (percentil 99): {iter_ref}")
+print(f"Common iter_ref (99th percentile): {iter_ref}")
 
-fig, axes = plt.subplots(1, len(metodos), figsize=(6 * len(metodos), 6), constrained_layout=True)
-for ax, (nombre, _, max_iter, _), (raiz, iters, estado) in zip(axes, metodos, resultados):
-    plot_basins(raiz, iters, estado, len(roots), ax=ax, iter_ref=iter_ref)
-    ax.set_title(f"{nombre}, max_iter={max_iter}")
+fig, axes = plt.subplots(1, len(methods), figsize=(6 * len(methods), 6), constrained_layout=True)
+for ax, (name, _, max_iter, _), (root, iters, status) in zip(axes, methods, results):
+    plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
+    ax.set_title(f"{name}, max_iter={max_iter}")
 
-salida_fig = RAIZ_PROYECTO / "figures" / "e3_failures.png"
-fig.savefig(salida_fig, dpi=100, bbox_inches="tight")
-print(f"Figura guardada en {salida_fig}")
+output_fig = PROJECT_ROOT / "figures" / "e3_failures.png"
+fig.savefig(output_fig, dpi=100, bbox_inches="tight")
+print(f"Figure saved to {output_fig}")

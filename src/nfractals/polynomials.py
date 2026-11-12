@@ -2,8 +2,8 @@ import numpy as np
 
 
 def make_polynomial(coeffs, dtype=np.complex128):
-    """Devuelve (f, df, d2f, roots). Las funciones calculan en `dtype`;
-    las raíces de referencia siempre en doble precisión."""
+    """Return (f, df, d2f, roots). The functions compute in `dtype`;
+    the reference roots are always in double precision."""
     p64 = np.asarray(coeffs, dtype=np.complex128)
     roots = np.roots(p64)
 
@@ -24,7 +24,7 @@ def make_polynomial(coeffs, dtype=np.complex128):
 
 
 def unity_poly(n):
-    """Coeficientes de z^n - 1 (de mayor a menor grado)."""
+    """Coefficients of z^n - 1 (from highest to lowest degree)."""
     c = [0] * (n + 1)
     c[0] = 1
     c[-1] = -1
@@ -32,29 +32,30 @@ def unity_poly(n):
 
 
 def unique_roots(roots, tol=1e-6):
-    """Agrupa en una sola raíz (promediando) las que distan menos de `tol` entre sí.
+    """Merge into a single root (by averaging) those closer than `tol` to each other.
 
-    Útil con raíces múltiples: np.roots devuelve varias casi idénticas y el argmin
-    partiría su cuenca. Las raíces quedan en el orden de la primera aparición de cada
-    grupo; la pertenencia a un grupo es transitiva (cadenas de raíces a menos de tol).
+    Useful with multiple roots: np.roots returns several almost identical ones and
+    the argmin would split their basin. The roots come out in the order of the first
+    appearance of each group; group membership is transitive (chains of roots closer
+    than tol).
     """
     roots = np.asarray(roots)
     n = len(roots)
-    grupo = -np.ones(n, dtype=int)
-    n_grupos = 0
+    group = -np.ones(n, dtype=int)
+    n_groups = 0
     for i in range(n):
-        if grupo[i] >= 0:
+        if group[i] >= 0:
             continue
-        grupo[i] = n_grupos
-        pila = [i]
-        while pila:
-            a = pila.pop()
+        group[i] = n_groups
+        stack = [i]
+        while stack:
+            a = stack.pop()
             for b in range(n):
-                if grupo[b] < 0 and abs(roots[a] - roots[b]) < tol:
-                    grupo[b] = n_grupos
-                    pila.append(b)
-        n_grupos += 1
-    return np.array([roots[grupo == g].mean() for g in range(n_grupos)])
+                if group[b] < 0 and abs(roots[a] - roots[b]) < tol:
+                    group[b] = n_groups
+                    stack.append(b)
+        n_groups += 1
+    return np.array([roots[group == g].mean() for g in range(n_groups)])
 
 
 POLYNOMIALS = {

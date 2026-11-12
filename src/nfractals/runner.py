@@ -1,70 +1,70 @@
 import numpy as np
 
-ACTIVO = 0
-CONVERGIDO = 1
-FALLO = 2
-NO_CONVERGE = 3
+ACTIVE = 0
+CONVERGED = 1
+FAILED = 2
+NOT_CONVERGED = 3
 
 
-def un_punto(fn):
-    """Adapta un paso z -> z' (métodos de un solo punto) al contrato de estado."""
+def single_point(fn):
+    """Adapt a step z -> z' (single-point methods) to the state contract."""
     return lambda s: (fn(s[0]),)
 
 
 def run_basins(z0, step, f, roots, tol, max_iter, init=None):
-    """Itera `step` sobre la malla z0 y clasifica cada punto.
+    """Iterate `step` over the grid z0 and classify every point.
 
-    `step` recibe una tupla de arrays (el estado de los puntos activos) y
-    devuelve la tupla del estado siguiente, con la misma longitud. El último
-    elemento del estado es siempre la aproximación actual. `init` es el estado
-    inicial (tupla de arrays con la forma de la malla); por defecto (z0,).
-    Los métodos de un solo punto se adaptan con `un_punto`.
+    `step` receives a tuple of arrays (the state of the active points) and
+    returns the tuple of the next state, with the same length. The last
+    element of the state is always the current approximation. `init` is the
+    initial state (tuple of arrays with the grid shape); by default (z0,).
+    Single-point methods are adapted with `single_point`.
 
-    Devuelve (raiz, iters, estado):
-      raiz   -- índice de la raíz más cercana (argmin |z - roots|), -1 si no convergió
-      iters  -- iteración (desde 1) en que convergió, 0 si no
-      estado -- ACTIVO / CONVERGIDO / FALLO / NO_CONVERGE
+    Returns (root, iters, status):
+      root   -- index of the nearest root (argmin |z - roots|), -1 if it did not converge
+      iters  -- iteration (counting from 1) at which it converged, 0 if it did not
+      status -- ACTIVE / CONVERGED / FAILED / NOT_CONVERGED
     """
     if init is None:
         init = (z0,)
-    S = tuple(np.array(a, copy=True) for a in init)
-    shape = S[-1].shape
-    if any(a.shape != shape for a in S):
-        raise ValueError("todos los arrays del estado deben tener la forma de la malla")
+    state = tuple(np.array(a, copy=True) for a in init)
+    shape = state[-1].shape
+    if any(a.shape != shape for a in state):
+        raise ValueError("all arrays of the state must have the grid shape")
     roots = np.asarray(roots)
 
-    estado = np.full(shape, ACTIVO, dtype=np.int8)
+    status = np.full(shape, ACTIVE, dtype=np.int8)
     iters = np.zeros(shape, dtype=np.int32)
-    raiz = np.full(shape, -1, dtype=np.int32)
+    root = np.full(shape, -1, dtype=np.int32)
 
     for it in range(1, max_iter + 1):
-        activo = estado == ACTIVO
-        if not activo.any():
+        active = status == ACTIVE
+        if not active.any():
             break
 
-        nuevo = step(tuple(a[activo] for a in S))
-        if len(nuevo) != len(S):
-            raise ValueError("step debe devolver un estado de la misma longitud")
-        for a, n in zip(S, nuevo):
-            a[activo] = n
-        z_nuevo = nuevo[-1]
+        new = step(tuple(a[active] for a in state))
+        if len(new) != len(state):
+            raise ValueError("step must return a state of the same length")
+        for a, n in zip(state, new):
+            a[active] = n
+        z_new = new[-1]
 
-        # Solo los puntos que seguían activos: fallo si el valor no es finito.
-        finito = np.isfinite(z_nuevo)
+        # Only the points that were still active: failure if the value is not finite.
+        finite = np.isfinite(z_new)
         with np.errstate(all="ignore"):
-            conv = finito & (np.abs(f(z_nuevo)) < tol)
+            conv = finite & (np.abs(f(z_new)) < tol)
 
-        sub = np.full(z_nuevo.shape, ACTIVO, dtype=np.int8)
-        sub[~finito] = FALLO
-        sub[conv] = CONVERGIDO
-        estado[activo] = sub
+        sub = np.full(z_new.shape, ACTIVE, dtype=np.int8)
+        sub[~finite] = FAILED
+        sub[conv] = CONVERGED
+        status[active] = sub
 
-        # Índices planos de los que acaban de converger en esta iteración.
-        idx = np.flatnonzero(activo)[conv]
+        # Flat indices of the points that have just converged in this iteration.
+        idx = np.flatnonzero(active)[conv]
         if idx.size:
             iters.flat[idx] = it
-            dist = np.abs(z_nuevo[conv][:, None] - roots[None, :])
-            raiz.flat[idx] = np.argmin(dist, axis=1)
+            dist = np.abs(z_new[conv][:, None] - roots[None, :])
+            root.flat[idx] = np.argmin(dist, axis=1)
 
-    estado[estado == ACTIVO] = NO_CONVERGE
-    return raiz, iters, estado
+    status[status == ACTIVE] = NOT_CONVERGED
+    return root, iters, status

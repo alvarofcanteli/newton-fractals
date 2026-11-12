@@ -1,4 +1,4 @@
-polinomio,h,max_iter,iter media,iter mediana,evals media,no converge (%),fallo (%),frontera (%),raices,raiz 1 (%),raiz 2 (%),raiz 3 (%)
+polynomial,h,max_iter,mean iter,median iter,mean evals,not converged (%),failed (%),boundary (%),roots,root 1 (%),root 2 (%),root 3 (%)
 z^3 - 1,0.3,300,69.952,70.0,139.905,0.0,0.0,1.4552,-0.5+0.866j | -0.5-0.866j | 1,32.3096,32.3096,35.3808
 z^3 - 1,0.5,300,37.169,37.0,74.339,0.0,0.0,1.8922,-0.5+0.866j | -0.5-0.866j | 1,32.4304,32.4304,35.1392
 z^3 - 1,0.7,300,22.734,22.0,45.469,0.0,0.0,2.4126,-0.5+0.866j | -0.5-0.866j | 1,32.3723,32.3723,35.2554

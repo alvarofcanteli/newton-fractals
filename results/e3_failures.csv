@@ -1,6 +1,6 @@
-metodo,max_iter,convergido (%),no converge (%),fallo (%),no converge en disco r=0.2 centro 0 (%),no converge en disco r=0.2 centro 1 (%)
+method,max_iter,converged (%),not converged (%),failed (%),not converged in disk r=0.2 centre 0 (%),not converged in disk r=0.2 centre 1 (%)
 Newton,50,98.9434,1.0566,0.0,31.7881,1.1993
 Halley,50,100.0,0.0,0.0,,
-Newton amortiguado (h=0.7),200,100.0,0.0,0.0,,
-Secante,100,99.9148,0.0852,0.0,,
+Damped Newton (h=0.7),200,100.0,0.0,0.0,,
+Secant,100,99.9148,0.0852,0.0,,
 Müller,100,100.0,0.0,0.0,,

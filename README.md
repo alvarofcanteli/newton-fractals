@@ -1,46 +1,46 @@
-# Fractales de Newton y métodos de búsqueda de raíces
+# Newton fractals and root-finding methods
 
-Este proyecto calcula y compara las **cuencas de atracción** de varios métodos de búsqueda de raíces
-(Newton, Halley, Newton amortiguado, secante y Müller) sobre polinomios en el plano complejo.
-Para cada punto de una malla se itera el método, se clasifica el resultado (convergido a una raíz,
-no converge o fallo numérico) y se mide el coste y la forma de las cuencas.
+This project computes and compares the **basins of attraction** of several root-finding methods
+(Newton, Halley, damped Newton, secant and Müller) on polynomials in the complex plane.
+For every point of a grid the method is iterated, the outcome is classified (converged to a root,
+not converged, or numerical failure), and the cost and the shape of the basins are measured.
 
-**Pregunta guía:** ¿Qué método de rootfinding es más fiable según el punto desde el que se empieza, y por qué?
+**Guiding question:** Which root-finding method is more reliable depending on the starting point, and why?
 
-Para responderla, se compara el efecto del método, del polinomio, del amortiguamiento y de la precisión aritmética.
+To answer it, we compare the effect of the method, the polynomial, the damping and the floating-point precision.
 
-## Métodos
+## Methods
 
 - **Newton:** `z - f(z)/f'(z)`.
 - **Halley:** `z - 2 f f' / (2 f'^2 - f f'')`.
-- **Newton amortiguado:** `z - h f(z)/f'(z)` con `h = 0,7` (salvo en E6, que varía `h`).
-- **Secante:** usa `(z_{k-1}, z_k)`, con la convención `z_{-1} = z_0 + δ`.
-- **Müller:** interpola una parábola por `(z_{k-2}, z_{k-1}, z_k)` y elige el signo de la raíz cuadrada
-  que da el denominador de mayor módulo; estado inicial `(z_0, z_0 + δ, z_0 + 2δ)`.
+- **Damped Newton:** `z - h f(z)/f'(z)` with `h = 0.7` (except in E6, which varies `h`).
+- **Secant:** uses `(z_{k-1}, z_k)`, with the convention `z_{-1} = z_0 + δ`.
+- **Müller:** fits a parabola through `(z_{k-2}, z_{k-1}, z_k)` and picks the sign of the square root
+  that gives the denominator of larger modulus; initial state `(z_0, z_0 + δ, z_0 + 2δ)`.
 
-## Experimentos
+## Experiments
 
-| Experimento | Qué hace | Script |
+| Experiment | What it does | Script |
 |---|---|---|
-| E0 | Mapa de cuencas de Newton en z³−1 y comparación de los cinco métodos | `experiments/e0_newton_z3.py`, `experiments/e0_compare.py` |
-| E1 | % de cuencas por raíz según el tamaño de malla N y la ventana (cuadrado o disco) | `experiments/e1_basins.py` |
-| E2 | Coste: iteraciones y evaluaciones de f/f'/f'' hasta converger, con histogramas | `experiments/e2_cost.py` |
-| E3 | Fallos y no convergencia en z³−2z+2 (ciclo 0 → 1 → 0 de Newton) | `experiments/e3_failures.py` |
-| E3b | Diagnóstico de la secante en z³−1: no convergidos según `max_iter`, su estado final y un barrido de δ ∈ {1e-2, 1e-3, 1e-4, 1e-6} con `max_iter` = 200 (genera `figures/diag_secante.png`) | `experiments/e3b_secante_diag.py` |
-| E4 | Orden de convergencia con mpmath a 300 dígitos, incluida la raíz doble | `experiments/e4_order.py` |
-| E5 | Comparación en z³−1, z⁴−1, z⁵−1, z⁶−1, (z−1)²(z+1) y z³−2z+2 | `experiments/e5_polynomials.py` |
-| E5b | Comprobaciones sobre E5: Newton en z⁵−1 con `max_iter` = 40 y 50, y dónde falla la secante (dentro y fuera de \|z₀\| < 1) | `experiments/e5b_checks.py` |
-| E6 | Newton amortiguado en función de `h` y complejidad de la frontera | `experiments/e6_damped.py` |
-| E7 | Efecto de la precisión: complex64 frente a complex128 | `experiments/e7_precision.py` |
-| E7b | Müller en E7: efecto de δ y distancia de los píxeles que difieren a las fronteras (genera `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
+| E0 | Basin map of Newton on z³−1 and comparison of the five methods | `experiments/e0_newton_z3.py`, `experiments/e0_compare.py` |
+| E1 | % of each basin by grid size N and window (square or disk) | `experiments/e1_basins.py` |
+| E2 | Cost: iterations and evaluations of f/f'/f'' until convergence, with histograms | `experiments/e2_cost.py` |
+| E3 | Failures and non-convergence on z³−2z+2 (Newton's 0 → 1 → 0 cycle) | `experiments/e3_failures.py` |
+| E3b | Diagnosis of the secant method on z³−1: non-converged points by `max_iter`, their final state, and a sweep of δ ∈ {1e-2, 1e-3, 1e-4, 1e-6} with `max_iter` = 200 (generates `figures/diag_secant.png`) | `experiments/e3b_secant_diag.py` |
+| E4 | Order of convergence with mpmath at 300 digits, including the double root | `experiments/e4_order.py` |
+| E5 | Comparison on z³−1, z⁴−1, z⁵−1, z⁶−1, (z−1)²(z+1) and z³−2z+2 | `experiments/e5_polynomials.py` |
+| E5b | Checks on E5: Newton on z⁵−1 with `max_iter` = 40 and 50, and where the secant method fails (inside and outside \|z₀\| < 1) | `experiments/e5b_checks.py` |
+| E6 | Damped Newton as a function of `h` and boundary complexity | `experiments/e6_damped.py` |
+| E7 | Effect of precision: complex64 versus complex128 | `experiments/e7_precision.py` |
+| E7b | Müller in E7: effect of δ and distance of the differing pixels to the boundaries (generates `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
 
-## Instalación y ejecución
+## Installation and usage
 
-Requiere Python 3.9 o superior. Desde la raíz del repositorio:
+Requires Python 3.9 or later. From the repository root:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # en Windows: .venv\Scripts\activate
+source .venv/bin/activate        # on Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
@@ -50,7 +50,7 @@ Tests:
 python -m pytest
 ```
 
-Experimentos (cada uno escribe en `results/` y `figures/`; E3 y E5 tardan varios minutos):
+Experiments (each one writes to `results/` and `figures/`; E3 and E5 take several minutes):
 
 ```bash
 python experiments/e0_newton_z3.py
@@ -58,7 +58,7 @@ python experiments/e0_compare.py
 python experiments/e1_basins.py
 python experiments/e2_cost.py
 python experiments/e3_failures.py
-python experiments/e3b_secante_diag.py
+python experiments/e3b_secant_diag.py
 python experiments/e4_order.py
 python experiments/e5_polynomials.py
 python experiments/e5b_checks.py
@@ -67,98 +67,100 @@ python experiments/e7_precision.py
 python experiments/e7b_muller_delta.py
 ```
 
-> **Nota:** `results/` y `figures/` ya están en el repositorio, así que no hace falta volver a ejecutar
-> los experimentos para ver los resultados.
+> **Note:** `results/` and `figures/` are already in the repository, so there is no need to re-run
+> the experiments to see the results.
 
-## Estructura de carpetas
+## Folder structure
 
 ```
 src/nfractals/
-    methods.py        pasos de Newton, Halley, secante y Müller (NumPy, vectorizados)
-    runner.py         run_basins: itera la malla con estado por método y clasifica los puntos
-    polynomials.py    polinomios, derivadas, raíces de referencia (unique_roots, unity_poly)
-    plotting.py       mapas de cuencas (matiz = raíz, brillo = iteraciones)
-    convergence.py    versiones escalares con mpmath para medir órdenes de convergencia
-experiments/          un script por experimento (E0 a E7) y los de diagnóstico (E3b, E5b, E7b)
-tests/                tests de validación (pytest)
-results/              tablas CSV de los experimentos
-figures/              figuras generadas
+    methods.py        Newton, Halley, secant and Müller steps (NumPy, vectorised)
+    runner.py         run_basins: iterates the grid with per-method state and classifies the points
+    polynomials.py    polynomials, derivatives, reference roots (unique_roots, unity_poly)
+    plotting.py       basin maps (hue = root, brightness = iterations)
+    convergence.py    scalar mpmath versions to measure orders of convergence
+experiments/          one script per experiment (E0 to E7) and the diagnostic ones (E3b, E5b, E7b)
+tests/                validation tests (pytest)
+results/              CSV tables of the experiments
+figures/              generated figures
 ```
 
-## Resultados en z³−1
+## Results on z³−1
 
-Ventana [−2, 2]², N = 1000, tol = 1e-10 (complex128). Los datos salen de `results/e2_cost.csv`
-(iteraciones y evaluaciones), `results/e5_polynomials.csv` (% de convergencia) y
-`results/e4_order.csv` (orden observado: media de los tres últimos `p_k` de la serie con
-300 dígitos).
+Window [−2, 2]², N = 1000, tol = 1e-10 (complex128). The data come from `results/e2_cost.csv`
+(iterations and evaluations), `results/e5_polynomials.csv` (% of convergence) and
+`results/e4_order.csv` (observed order: mean of the last three `p_k` of the 300-digit series).
 
-| Método | max_iter | Iteraciones medias | Evaluaciones medias | % convergido | Orden observado |
+| Method | max_iter | Mean iterations | Mean evaluations | % converged | Observed order |
 |---|---|---|---|---|---|
-| Newton | 50 | 7,652 | 15,304 | 100,00 | 2,000 |
-| Halley | 50 | 4,429 | 13,286 | 100,00 | 2,996 (tiende a 3) |
-| Newton amortiguado (h = 0,7) | 200 | 22,734 | 45,469 | 100,00 | 1 (razón 0,3) |
-| Secante | 100 | 10,348 | 12,348 | 94,74 | 1,617 |
-| Müller | 100 | 5,688 | 8,688 | 100,00 | 1,845 |
+| Newton | 50 | 7.652 | 15.304 | 100.00 | 2.000 |
+| Halley | 50 | 4.429 | 13.286 | 100.00 | 2.996 (tends to 3) |
+| Damped Newton (h = 0.7) | 200 | 22.734 | 45.469 | 100.00 | 1 (ratio 0.3) |
+| Secant | 100 | 10.348 | 12.348 | 94.74 | 1.617 |
+| Müller | 100 | 5.688 | 8.688 | 100.00 | 1.845 |
 
-Las iteraciones y evaluaciones medias son las de los puntos convergidos.
+Mean iterations and evaluations are those of the converged points.
 
-![Cuencas de z³−1 con los cinco métodos](figures/e0_compare.png)
+![Basins of z³−1 with the five methods](figures/e0_compare.png)
 
-*Cuencas de z³−1 en [−2, 2]², de izquierda a derecha: Newton, Halley, Newton amortiguado, secante y
-Müller. Cada raíz tiene un color (rojo, verde, azul) y el brillo baja al aumentar las iteraciones;
-el negro marca los puntos que no convergen. Las fronteras de Newton y del amortiguado son
-fractales, con islas de otro color. Las de Halley son más lisas y con menos islas. La secante
-muestra bandas fractales anchas a lo largo de las fronteras, con zonas negras (no convergen),
-sobre todo cerca del centro. Las fronteras de Müller son casi rectas, con tres sectores, y solo
-aparecen detalles pequeños en los bordes de la ventana.*
+*Basins of z³−1 on [−2, 2]², from left to right: Newton, Halley, damped Newton, secant and
+Müller. Each root has its own colour (red, green, blue) and the brightness drops as the iterations
+increase; black marks the points that do not converge. The boundaries of Newton and damped Newton are
+fractal, with islands of another colour. Halley's are smoother with fewer islands. The secant method
+shows wide fractal bands along the boundaries, with black zones (not converged), mostly near the
+centre. Müller's boundaries are almost straight, with three sectors, and only small details appear
+at the edges of the window.*
 
-![Newton amortiguado: iteraciones medias y fracción de frontera frente a h](figures/e6_curves.png)
+![Damped Newton: mean iterations and boundary fraction versus h](figures/e6_curves.png)
 
-*Newton amortiguado en z³−1 y z³−2z+2 (valores de `results/e6_damped.csv`). A la izquierda, las iteraciones medias de los convergidos bajan de 69,952 (z³−1) y 70,113 (z³−2z+2) con h = 0,3 a 7,652 y 7,433 con h = 1. A la derecha, la fracción de píxeles de frontera sube con h: en z³−1 de 1,4552 % a 3,4496 % y en z³−2z+2 de 1,1514 % a 2,8478 %, siempre por debajo de z³−1.*
+*Damped Newton on z³−1 and z³−2z+2 (values from `results/e6_damped.csv`). On the left, the mean
+iterations of the converged points drop from 69.952 (z³−1) and 70.113 (z³−2z+2) with h = 0.3 to
+7.652 and 7.433 with h = 1. On the right, the fraction of boundary pixels grows with h: from 1.4552 %
+to 3.4496 % on z³−1 and from 1.1514 % to 2.8478 % on z³−2z+2, always below z³−1.*
 
-![Fallos y no convergencia en z³−2z+2](figures/e3_failures.png)
+![Failures and non-convergence on z³−2z+2](figures/e3_failures.png)
 
-*Cuencas de z³−2z+2 en [−2, 2]² con los mismos cinco métodos y orden que la figura anterior.
-La raíz real (−1,769) ocupa en rojo la zona izquierda y las dos complejas el resto, en verde y
-azul. Newton tiene discos negros de puntos que no convergen: el mayor está en torno a z = 0, sobre el eje
-real, y hay otros menores repartidos fuera del eje (puntos que Newton lleva a la zona atrapada por el
-ciclo 0 ↔ 1). Halley y el amortiguado no tienen puntos negros. La secante solo muestra una pequeña
-mancha negra junto al eje real. Müller tiene fronteras más lisas y redondeadas.*
+*Basins of z³−2z+2 on [−2, 2]² with the same five methods and order as the first figure.
+The real root (−1.769) takes the left zone in red and the two complex roots the rest, in green and
+blue. Newton has black discs of points that do not converge: the largest is around z = 0, on the real
+axis, and there are smaller ones scattered off the axis (points that Newton sends to the zone trapped
+by the 0 ↔ 1 cycle). Halley and damped Newton have no black points. The secant method only shows a
+small black spot next to the real axis. Müller has smoother, rounder boundaries.*
 
-## Hallazgos principales
+## Main findings
 
-1. **Coste en evaluaciones (E2, z³−1):** Müller (8,688) < secante (12,348) < Halley (13,286) < Newton (15,304) ≪ Newton amortiguado con h = 0,7 (45,469).
-2. **Ciclo 0 ↔ 1 de Newton (E3, z³−2z+2):** Newton deja sin converger el 1,06 % de la malla; Halley, el amortiguado y Müller convergen en todos los puntos y la secante falla en el 0,09 %.
-3. **Grado del polinomio (E5):** la secante se degrada con el grado (94,74 % convergido en z³−1, 79,64 % en z⁴−1, 77,46 % en z⁵−1 y 74,05 % en z⁶−1), mientras que Müller se mantiene por encima del 99,6 % (mínimo 99,65 % en z⁶−1).
-4. **Órdenes observados (E4, 300 dígitos):** Newton 2,000, Halley 2,996 (tiende a 3), secante 1,617, Müller 1,845; el amortiguado y Newton en la raíz doble son lineales, con razón 0,3 y 0,5 respectivamente.
-5. **Amortiguamiento (E6, z³−2z+2):** con h = 0,9 desaparece el ciclo (0 % sin converger frente a 1,06 % con h = 1) con unas 1,8 veces más iteraciones (13,703 frente a 7,433).
-6. **Precisión (E7, E7b):** complex64 frente a complex128 solo cambia píxeles pegados a las fronteras (0,0026 % en Newton, 0 % en Halley, 0,0010 % en el amortiguado y 0,155 % en la secante), salvo Müller con δ = 1e-3, que difiere en el 6,71 % de los píxeles, la mayoría lejos de las fronteras; con δ = 1e-2 baja al 0,055 %.
+1. **Cost in evaluations (E2, z³−1):** Müller (8.688) < secant (12.348) < Halley (13.286) < Newton (15.304) ≪ damped Newton with h = 0.7 (45.469).
+2. **Newton's 0 ↔ 1 cycle (E3, z³−2z+2):** Newton leaves 1.06 % of the grid unconverged; Halley, damped Newton and Müller converge at every point and the secant method fails at 0.09 %.
+3. **Polynomial degree (E5):** the secant method degrades with the degree (94.74 % converged on z³−1, 79.64 % on z⁴−1, 77.46 % on z⁵−1 and 74.05 % on z⁶−1), while Müller stays above 99.6 % (minimum 99.65 % on z⁶−1).
+4. **Observed orders (E4, 300 digits):** Newton 2.000, Halley 2.996 (tends to 3), secant 1.617, Müller 1.845; damped Newton and Newton at the double root are linear, with ratios 0.3 and 0.5 respectively.
+5. **Damping (E6, z³−2z+2):** with h = 0.9 the cycle disappears (0 % unconverged versus 1.06 % with h = 1) at about 1.8 times more iterations (13.703 versus 7.433).
+6. **Precision (E7, E7b):** complex64 versus complex128 only changes pixels next to the boundaries (0.0026 % for Newton, 0 % for Halley, 0.0010 % for damped Newton and 0.155 % for the secant method), except Müller with δ = 1e-3, which differs in 6.71 % of the pixels, most of them far from the boundaries; with δ = 1e-2 it drops to 0.055 %.
 
-## Convenciones y parámetros
+## Conventions and parameters
 
-- **Ventana y malla:** [−2, 2]² con N × N puntos (N = 1000, salvo en E1, que usa 250, 500, 1000 y 2000).
-- **Criterio de parada:** un punto converge cuando `|f(z)| < tol` en la iteración actual. Si el
-  nuevo valor no es finito (inf o NaN), el punto se marca como **fallo**; si se agota `max_iter`,
-  como **no converge**. La raíz asignada es la más cercana (`argmin |z − raíz|`) entre las raíces
-  distintas de `np.roots`, agrupando con `unique_roots` las raíces casi idénticas (raíces dobles).
-- **Tolerancias:** `1e-10` en complex128; `1e-5` en complex64 (E7, unas 84 veces el épsilon de
-  máquina de 1,2e-7); `1e-8` en el polinomio de raíz doble (E5). E4 trabaja con mpmath a 300 dígitos
-  y se detiene al bajar el error de `1e-250`.
-- **`max_iter`:** 50 en Newton y Halley, 200 en Newton amortiguado (300 en E6), 100 en secante
-  y Müller.
-- **δ de secante y Müller:** `δ = 1e-3`, salvo en E7b, que prueba 1e-2 y 1e-1. Con δ = 1e-3, Müller en
-  complex64 difiere de complex128 en el 6,7 % de los píxeles porque δ es demasiado pequeño para esa precisión
-  (el error de redondeo de la segunda diferencia dividida es del orden de ε/δ²); con δ = 1e-2 la diferencia
-  baja al 0,055 %.
-- **Coste por paso y evaluaciones iniciales:**
-  Newton 2 evaluaciones por paso (f, f'), Halley 3 (f, f', f''), Newton amortiguado 2,
-  secante 1 más 2 iniciales, Müller 1 más 3 iniciales. Evaluaciones por punto =
-  iteraciones × coste por paso + evaluaciones iniciales.
+- **Window and grid:** [−2, 2]² with N × N points (N = 1000, except in E1, which uses 250, 500, 1000 and 2000).
+- **Stopping criterion:** a point converges when `|f(z)| < tol` at the current iteration. If the new
+  value is not finite (inf or NaN) the point is marked as **failed**; if `max_iter` is exhausted,
+  as **not converged**. The assigned root is the nearest one (`argmin |z − root|`) among the
+  distinct roots of `np.roots`, merging almost identical roots (double roots) with `unique_roots`.
+- **Tolerances:** `1e-10` in complex128; `1e-5` in complex64 (E7, about 84 times the machine epsilon
+  of 1.2e-7); `1e-8` for the double-root polynomial (E5). E4 works with mpmath at 300 digits
+  and stops when the error drops below `1e-250`.
+- **`max_iter`:** 50 for Newton and Halley, 200 for damped Newton (300 in E6), 100 for the secant
+  and Müller.
+- **δ of the secant method and Müller:** `δ = 1e-3`, except in E7b, which tries 1e-2 and 1e-1. With δ = 1e-3,
+  Müller in complex64 differs from complex128 in 6.7 % of the pixels because δ is too small for that
+  precision (the rounding error of the second divided difference is of order ε/δ²); with δ = 1e-2 the
+  difference drops to 0.055 %.
+- **Cost per step and initial evaluations:**
+  Newton 2 evaluations per step (f, f'), Halley 3 (f, f', f''), damped Newton 2,
+  secant 1 plus 2 initial, Müller 1 plus 3 initial. Evaluations per point =
+  iterations × cost per step + initial evaluations.
 
-## Equipo y asignatura
+## Team and course
 
 - Pablo Arístegui
 - Alfonso Botín-Sanz de Sautuola
 - Álvaro Fernández-Canteli
 
-Asignatura: Numerical Methods, IE University, curso 2026-27.
+Course: Numerical Methods, IE University, academic year 2026-27.
