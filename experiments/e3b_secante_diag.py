@@ -1,6 +1,6 @@
 """Diagnóstico de la secante en z^3 - 1: no convergidos según max_iter y su estado final.
 
-Genera figures/diag_secante.png (mapa con max_iter = 400).
+Genera figures/diag_secante.png (mapa con max_iter = 400) y barre delta con max_iter = 200.
 """
 import sys
 from pathlib import Path
@@ -77,3 +77,11 @@ ax.set_title("Secante, z^3 - 1, max_iter=400")
 salida = RAIZ_PROYECTO / "figures" / "diag_secante.png"
 fig.savefig(salida, dpi=100, bbox_inches="tight")
 print(f"Figura guardada en {salida}")
+
+# Barrido de delta (z_{-1} = z_0 + delta) con max_iter = 200.
+print("\nNo convergidos con max_iter=200 según delta:")
+for delta in (1e-2, 1e-3, 1e-4, 1e-6):
+    e = run_basins(z0, lambda s: secant_step(s, f), f, roots, TOL, 200,
+                   init=secant_init(z0, delta))[2]
+    print(f"  delta={delta:g}: no converge {np.mean(e == NO_CONVERGE):.4%} "
+          f"({(e == NO_CONVERGE).sum()})")

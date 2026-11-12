@@ -5,8 +5,9 @@ Este proyecto calcula y compara las **cuencas de atracción** de varios métodos
 Para cada punto de una malla se itera el método, se clasifica el resultado (convergido a una raíz,
 no converge o fallo numérico) y se mide el coste y la forma de las cuencas.
 
-**Pregunta guía:** ¿cómo cambian la forma de las cuencas, el coste y la robustez de un método de
-búsqueda de raíces al cambiar el método, el polinomio, el amortiguamiento o la precisión aritmética?
+**Pregunta guía:** ¿Qué método de rootfinding es más fiable según el punto desde el que se empieza, y por qué?
+
+Para responderla, se compara el efecto del método, del polinomio, del amortiguamiento y de la precisión aritmética.
 
 ## Métodos
 
@@ -25,7 +26,7 @@ búsqueda de raíces al cambiar el método, el polinomio, el amortiguamiento o l
 | E1 | % de cuencas por raíz según el tamaño de malla N y la ventana (cuadrado o disco) | `experiments/e1_basins.py` |
 | E2 | Coste: iteraciones y evaluaciones de f/f'/f'' hasta converger, con histogramas | `experiments/e2_cost.py` |
 | E3 | Fallos y no convergencia en z³−2z+2 (ciclo 0 → 1 → 0 de Newton) | `experiments/e3_failures.py` |
-| E3b | Diagnóstico de la secante en z³−1: no convergidos según `max_iter` y su estado final (genera `figures/diag_secante.png`) | `experiments/e3b_secante_diag.py` |
+| E3b | Diagnóstico de la secante en z³−1: no convergidos según `max_iter`, su estado final y un barrido de δ ∈ {1e-2, 1e-3, 1e-4, 1e-6} con `max_iter` = 200 (genera `figures/diag_secante.png`) | `experiments/e3b_secante_diag.py` |
 | E4 | Orden de convergencia con mpmath a 300 dígitos, incluida la raíz doble | `experiments/e4_order.py` |
 | E5 | Comparación en z³−1, z⁴−1, z⁵−1, z⁶−1, (z−1)²(z+1) y z³−2z+2 | `experiments/e5_polynomials.py` |
 | E5b | Comprobaciones sobre E5: Newton en z⁵−1 con `max_iter` = 40 y 50, y dónde falla la secante (dentro y fuera de \|z₀\| < 1) | `experiments/e5b_checks.py` |
@@ -65,6 +66,9 @@ python experiments/e6_damped.py
 python experiments/e7_precision.py
 python experiments/e7b_muller_delta.py
 ```
+
+> **Nota:** `results/` y `figures/` ya están en el repositorio, así que no hace falta volver a ejecutar
+> los experimentos para ver los resultados.
 
 ## Estructura de carpetas
 
@@ -110,18 +114,25 @@ aparecen detalles pequeños en los bordes de la ventana.*
 
 ![Newton amortiguado: iteraciones medias y fracción de frontera frente a h](figures/e6_curves.png)
 
-*Newton amortiguado en z³−1 y z³−2z+2. A la izquierda, las iteraciones medias de los convergidos
-bajan de unas 70 con h = 0,3 a unas 7,5 con h = 1, casi igual en los dos polinomios. A la derecha,
-la fracción de píxeles de frontera sube con h: en z³−1 de aproximadamente 1,5 % a 3,5 %, y en
-z³−2z+2 de aproximadamente 1,2 % a 2,8 %, siempre por debajo de z³−1.*
+*Newton amortiguado en z³−1 y z³−2z+2 (valores de `results/e6_damped.csv`). A la izquierda, las iteraciones medias de los convergidos bajan de 69,952 (z³−1) y 70,113 (z³−2z+2) con h = 0,3 a 7,652 y 7,433 con h = 1. A la derecha, la fracción de píxeles de frontera sube con h: en z³−1 de 1,4552 % a 3,4496 % y en z³−2z+2 de 1,1514 % a 2,8478 %, siempre por debajo de z³−1.*
 
 ![Fallos y no convergencia en z³−2z+2](figures/e3_failures.png)
 
 *Cuencas de z³−2z+2 en [−2, 2]² con los mismos cinco métodos y orden que la figura anterior.
 La raíz real (−1,769) ocupa en rojo la zona izquierda y las dos complejas el resto, en verde y
-azul. Newton tiene discos negros sobre el eje real (los puntos que no convergen por el ciclo
-0 → 1 → 0). Halley y el amortiguado no tienen puntos negros. La secante solo muestra una pequeña
+azul. Newton tiene discos negros de puntos que no convergen: el mayor está en torno a z = 0, sobre el eje
+real, y hay otros menores repartidos fuera del eje (puntos que Newton lleva a la zona atrapada por el
+ciclo 0 ↔ 1). Halley y el amortiguado no tienen puntos negros. La secante solo muestra una pequeña
 mancha negra junto al eje real. Müller tiene fronteras más lisas y redondeadas.*
+
+## Hallazgos principales
+
+1. **Coste en evaluaciones (E2, z³−1):** Müller (8,688) < secante (12,348) < Halley (13,286) < Newton (15,304) ≪ Newton amortiguado con h = 0,7 (45,469).
+2. **Ciclo 0 ↔ 1 de Newton (E3, z³−2z+2):** Newton deja sin converger el 1,06 % de la malla; Halley, el amortiguado y Müller convergen en todos los puntos y la secante falla en el 0,09 %.
+3. **Grado del polinomio (E5):** la secante se degrada con el grado (94,74 % convergido en z³−1, 79,64 % en z⁴−1, 77,46 % en z⁵−1 y 74,05 % en z⁶−1), mientras que Müller se mantiene por encima del 99,6 % (mínimo 99,65 % en z⁶−1).
+4. **Órdenes observados (E4, 300 dígitos):** Newton 2,000, Halley 2,996 (tiende a 3), secante 1,617, Müller 1,845; el amortiguado y Newton en la raíz doble son lineales, con razón 0,3 y 0,5 respectivamente.
+5. **Amortiguamiento (E6, z³−2z+2):** con h = 0,9 desaparece el ciclo (0 % sin converger frente a 1,06 % con h = 1) con unas 1,8 veces más iteraciones (13,703 frente a 7,433).
+6. **Precisión (E7, E7b):** complex64 frente a complex128 solo cambia píxeles pegados a las fronteras (0,0026 % en Newton, 0 % en Halley, 0,0010 % en el amortiguado y 0,155 % en la secante), salvo Müller con δ = 1e-3, que difiere en el 6,71 % de los píxeles, la mayoría lejos de las fronteras; con δ = 1e-2 baja al 0,055 %.
 
 ## Convenciones y parámetros
 
@@ -135,7 +146,10 @@ mancha negra junto al eje real. Müller tiene fronteras más lisas y redondeadas
   y se detiene al bajar el error de `1e-250`.
 - **`max_iter`:** 50 en Newton y Halley, 200 en Newton amortiguado (300 en E6), 100 en secante
   y Müller.
-- **δ de secante y Müller:** `δ = 1e-3` en todos los experimentos.
+- **δ de secante y Müller:** `δ = 1e-3`, salvo en E7b, que prueba 1e-2 y 1e-1. Con δ = 1e-3, Müller en
+  complex64 difiere de complex128 en el 6,7 % de los píxeles porque δ es demasiado pequeño para esa precisión
+  (el error de redondeo de la segunda diferencia dividida es del orden de ε/δ²); con δ = 1e-2 la diferencia
+  baja al 0,055 %.
 - **Coste por paso y evaluaciones iniciales:**
   Newton 2 evaluaciones por paso (f, f'), Halley 3 (f, f', f''), Newton amortiguado 2,
   secante 1 más 2 iniciales, Müller 1 más 3 iniciales. Evaluaciones por punto =
