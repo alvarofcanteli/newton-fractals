@@ -150,3 +150,17 @@ def test_small_residual_is_not_enough_at_a_double_root():
     assert abs(f(z)[0, 0]) < 1e-10
     _, _, status = run_basins(z, single_point(lambda w: w), roots, tol=1e-10, max_iter=2)
     assert status[0, 0] == NOT_CONVERGED
+
+
+def test_boundary_fraction_of_two_half_planes_is_about_two_over_n():
+    from nfractals.metrics import boundary_fraction
+    from nfractals.runner import CONVERGED
+
+    n = 100
+    root = np.zeros((n, n), dtype=int)
+    root[:, n // 2:] = 1  # vertical straight boundary: two columns of boundary pixels
+    status = np.full((n, n), CONVERGED)
+    assert np.isclose(boundary_fraction(root, status), 2 / n)
+    # Non-converged pixels are not counted.
+    status[: n // 2, :] = 0
+    assert np.isclose(boundary_fraction(root, status), 1 / n)

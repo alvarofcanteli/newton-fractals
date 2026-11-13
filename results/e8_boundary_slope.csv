@@ -1,0 +1,11 @@
+polynomial,method,"slope of log(boundary pixels) vs log(N), N = 250..2000"
+z^3 - 1,Newton,1.4424
+z^3 - 1,Halley,1.2
+z^3 - 1,Damped Newton (h=0.7),1.3961
+z^3 - 1,Secant,1.5546
+z^3 - 1,Müller,1.0037
+z^3 - 2z + 2,Newton,1.3889
+z^3 - 2z + 2,Halley,1.1975
+z^3 - 2z + 2,Damped Newton (h=0.7),1.2755
+z^3 - 2z + 2,Secant,1.4378
+z^3 - 2z + 2,Müller,1.0011

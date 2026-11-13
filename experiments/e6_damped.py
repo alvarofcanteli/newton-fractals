@@ -13,6 +13,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import newton_step  # noqa: E402
+from nfractals.metrics import boundary_fraction  # noqa: E402
 from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial, unique_roots  # noqa: E402
 from nfractals.runner import CONVERGED, FAILED, NOT_CONVERGED, run_basins, single_point  # noqa: E402
@@ -26,23 +27,6 @@ POLYS = [("z^3 - 1", "z3_minus_1"), ("z^3 - 2z + 2", "z3_minus_2z_plus_2")]
 
 x = np.linspace(-2, 2, N)
 z0 = x[None, :] + 1j * x[:, None]
-
-
-def boundary_fraction(root, status):
-    """Fraction of grid pixels that are converged and have some converged neighbour
-    (4-connectivity) with another root. Pairs in which some pixel does not converge
-    do not count."""
-    ok = status == CONVERGED
-    mark = np.zeros(root.shape, dtype=bool)
-    # Vertical neighbours.
-    d = ok[1:, :] & ok[:-1, :] & (root[1:, :] != root[:-1, :])
-    mark[1:, :] |= d
-    mark[:-1, :] |= d
-    # Horizontal neighbours.
-    d = ok[:, 1:] & ok[:, :-1] & (root[:, 1:] != root[:, :-1])
-    mark[:, 1:] |= d
-    mark[:, :-1] |= d
-    return mark.mean()  # over all pixels of the grid
 
 
 def label(r):
