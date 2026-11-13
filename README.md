@@ -30,6 +30,7 @@ To answer it, we compare the effect of the method, the polynomial, the damping a
 | E4 | Order of convergence with mpmath at 300 digits, including the double root | `experiments/e4_order.py` |
 | E5 | Comparison on z³−1, z⁴−1, z⁵−1, z⁶−1, (z−1)²(z+1) and z³−2z+2 | `experiments/e5_polynomials.py` |
 | E5b | Checks on E5: Newton on z⁵−1 with `max_iter` = 40 and 50, and where the secant method fails (inside and outside \|z₀\| < 1) | `experiments/e5b_checks.py` |
+| E5c | Tolerance sweep (1e-4, 1e-6, 1e-8, 1e-10) on the double root (z−1)²(z+1) under the criterion \|z − r\| < tol | `experiments/e5c_double_root_tol.py` |
 | E6 | Damped Newton as a function of `h` and boundary complexity | `experiments/e6_damped.py` |
 | E7 | Effect of precision: complex64 versus complex128 (Müller with δ = 1e-2, secant with δ = 1e-3) | `experiments/e7_precision.py` |
 | E7b | Müller in E7: effect of δ (sweep over 1e-1, 1e-2 and 1e-3) and distance of the differing pixels to the boundaries (generates `results/e7b_muller_delta.csv` and `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
@@ -62,6 +63,7 @@ python experiments/e3b_secant_diag.py
 python experiments/e4_order.py
 python experiments/e5_polynomials.py
 python experiments/e5b_checks.py
+python experiments/e5c_double_root_tol.py
 python experiments/e6_damped.py
 python experiments/e7_precision.py
 python experiments/e7b_muller_delta.py
@@ -79,7 +81,7 @@ src/nfractals/
     polynomials.py    polynomials, derivatives, reference roots (unique_roots, unity_poly)
     plotting.py       basin maps (hue = root, brightness = iterations)
     convergence.py    scalar mpmath versions to measure orders of convergence
-experiments/          one script per experiment (E0 to E7) and the diagnostic ones (E3b, E5b, E7b)
+experiments/          one script per experiment (E0 to E7) and the diagnostic ones (E3b, E5b, E5c, E7b)
 tests/                validation tests (pytest)
 results/              CSV tables of the experiments
 figures/              generated figures
@@ -143,13 +145,18 @@ small black spot next to the real axis. Müller's boundaries appear smoother and
   current iteration, `min_r |z − r| < tol`. The roots `r` are the distinct roots of `np.roots`, merging almost
   identical roots (double roots) with `unique_roots`, and the root assigned to a converged point is that
   nearest root. If the new value is not finite (inf or NaN) the point is marked as **failed**; if `max_iter`
-  is exhausted, as **not converged**. This replaces the earlier criterion `|f(z)| < tol`: on z³−1 and
-  z³−2z+2 the basins are identical pixel by pixel and only the iteration counts change (slightly fewer).
+  is exhausted, as **not converged**. This replaces the earlier criterion `|f(z)| < tol`. When the criterion
+  was changed we checked once that, on z³−1 and z³−2z+2, the root and the status of every pixel are the
+  same for the five methods and only the iteration counts change (slightly fewer); this check is not
+  reproduced by any script in the repository.
   At the double root of (z−1)²(z+1) the attainable accuracy of z is of the order of √ε ≈ 1.5e-8 (the
-  rounding noise of f near a double root), so a tolerance of 1e-8 sits at the numerical floor: with it,
-  0.1057 % of the points of Newton were not classified as converged and the secant method and Müller had
-  0.0336 % and 0.0772 % of failed points. For that reason E5 uses `tol = 1e-6` for this polynomial, safely
-  above the floor.
+  rounding noise of f near a double root), so a tolerance of 1e-8 sits at the numerical floor. E5c
+  (`results/e5c_double_root_tol.csv`) shows it: with `tol = 1e-8`, 0.1057 % of the points of Newton and
+  0.0156 % of Halley are not converged, and the secant method and Müller have 0.0336 % and 0.0772 % of
+  failed points; the points that do not converge stop at a median distance of about 1.02e-8 to 1.05e-8
+  from the root (for the failed ones, the last finite iterate). With `tol = 1e-10` only 31–44 % of the
+  points converge, and with 1e-6 and 1e-4 every method but the secant method (99.9742 %) reaches 100 %.
+  For that reason E5 uses `tol = 1e-6` for this polynomial, safely above the floor.
 - **Tolerances:** `1e-10` in complex128; `1e-5` in complex64 (E7, about 84 times the machine epsilon
   of 1.2e-7); `1e-6` for the double-root polynomial (E5). E4 works with mpmath at 300 digits
   and stops when the error drops below `1e-250`.
