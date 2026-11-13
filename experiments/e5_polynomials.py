@@ -41,7 +41,7 @@ POLYS = [
     ("z^4 - 1", "z4_minus_1", 1e-10),
     ("z^5 - 1", "z5_minus_1", 1e-10),
     ("z^6 - 1", "z6_minus_1", 1e-10),
-    ("(z-1)^2 (z+1)", "double_root", 1e-8),
+    ("(z-1)^2 (z+1)", "double_root", 1e-6),
     ("z^3 - 2z + 2", "z3_minus_2z_plus_2", 1e-10),
 ]
 
@@ -79,7 +79,7 @@ for poly_name, file_name, tol in POLYS:
         ("Müller", lambda s: muller_step(s, f), 100, 1, 3, muller_init(z0, DELTA)),
     ]
     results = [
-        run_basins(z0, step, f, roots, tol, max_iter, init=init)
+        run_basins(z0, step, roots, tol, max_iter, init=init)
         for _, step, max_iter, _, _, init in methods
     ]
 

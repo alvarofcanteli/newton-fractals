@@ -23,7 +23,7 @@ from nfractals.runner import CONVERGED, FAILED, NOT_CONVERGED, run_basins  # noq
 
 N = 1000
 TOL = 1e-10
-ITER_REF = 31.0  # the same iter_ref as e0_compare with the first four methods
+ITER_REF = 30.0  # the same iter_ref as e0_compare with the first four methods
 
 f, df, d2f, roots = make_polynomial(POLYNOMIALS["z^3 - 1"])
 x = np.linspace(-2, 2, N)
@@ -31,7 +31,7 @@ z0 = x[None, :] + 1j * x[:, None]
 
 res = {}
 for mi in (100, 200, 400):
-    r = run_basins(z0, lambda s: secant_step(s, f), f, roots, TOL, mi, init=secant_init(z0))
+    r = run_basins(z0, lambda s: secant_step(s, f), roots, TOL, mi, init=secant_init(z0))
     res[mi] = r
     st = r[2]
     print(f"max_iter={mi}: not converged {np.mean(st == NOT_CONVERGED):.4%} "
@@ -50,7 +50,9 @@ for _ in range(400):
     zn = new[-1]
     with np.errstate(all="ignore"):
         fin = np.isfinite(zn)
-        done = ~fin | (fin & (np.abs(f(zn)) < TOL))
+        dist_min = np.full(zn.shape, np.inf)
+        dist_min[fin] = np.abs(zn[fin][:, None] - roots[None, :]).min(axis=1)
+        done = ~fin | (dist_min < TOL)
     active.flat[np.flatnonzero(active)[done]] = False
 nc = active
 print("matches run_basins:", np.array_equal(nc, res[400][2] == NOT_CONVERGED))
@@ -82,7 +84,7 @@ print(f"Figure saved to {output}")
 # Sweep of delta (z_{-1} = z_0 + delta) with max_iter = 200.
 print("\nNot converged with max_iter=200 according to delta:")
 for delta in (1e-2, 1e-3, 1e-4, 1e-6):
-    st = run_basins(z0, lambda s: secant_step(s, f), f, roots, TOL, 200,
+    st = run_basins(z0, lambda s: secant_step(s, f), roots, TOL, 200,
                     init=secant_init(z0, delta))[2]
     print(f"  delta={delta:g}: not converged {np.mean(st == NOT_CONVERGED):.4%} "
           f"({(st == NOT_CONVERGED).sum()})")

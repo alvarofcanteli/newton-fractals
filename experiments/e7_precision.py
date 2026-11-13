@@ -26,7 +26,8 @@ from nfractals.runner import CONVERGED, run_basins, single_point  # noqa: E402
 
 N = 1000
 H_DAMPED = 0.7
-DELTA = 1e-3
+DELTA_SECANT = 1e-3
+DELTA_MULLER = 1e-2  # Müller in complex64 needs delta = 1e-2 (see E7b); the same in both precisions
 BOUNDARY_RADIUS = 3  # pixels, Chebyshev distance
 EPS = {np.complex64: float(np.finfo(np.float32).eps), np.complex128: float(np.finfo(np.float64).eps)}
 TOL = {np.complex64: 1e-5, np.complex128: 1e-10}
@@ -62,8 +63,8 @@ def methods_for(dt):
         ("Halley", single_point(lambda z: halley_step(z, f, df, d2f)), 50, None),
         (f"Damped Newton (h={H_DAMPED})",
          single_point(lambda z: newton_step(z, f, df, h=H_DAMPED)), 200, None),
-        ("Secant", lambda s: secant_step(s, f), 100, secant_init(z0, DELTA)),
-        ("Müller", lambda s: muller_step(s, f), 100, muller_init(z0, DELTA)),
+        ("Secant", lambda s: secant_step(s, f), 100, secant_init(z0, DELTA_SECANT)),
+        ("Müller", lambda s: muller_step(s, f), 100, muller_init(z0, DELTA_MULLER)),
     ]
 
 
@@ -83,7 +84,7 @@ def near_other_root(root, ok, radius):
 
 
 columns = [
-    "method", "max_iter", "tol complex64", "tol complex128",
+    "method", "max_iter", "delta", "tol complex64", "tol complex128",
     "root differs (% of all)", "root differs (% of those converged in both)",
     "converged only in complex64 (%)", "converged only in complex128 (%)",
     "mean iter complex64", "mean iter complex128",
@@ -92,7 +93,7 @@ columns = [
     "near boundary: % of those that differ in anything",
 ]
 rows = []
-res = {dt: [run_basins(grids[dt], step, systems[dt][0], systems[dt][3], TOL[dt], mi, init=init)
+res = {dt: [run_basins(grids[dt], step, systems[dt][3], TOL[dt], mi, init=init)
             for _, step, mi, init in methods_for(dt)]
        for dt in (np.complex64, np.complex128)}
 
@@ -114,7 +115,8 @@ for i, (name, _, max_iter, _) in enumerate(methods_for(np.complex128)):
     p_diff_all = 100 * diff_root.mean()
     p_diff_both = 100 * diff_root.sum() / both.sum()
     i64, i128 = float(it64[c64].mean()), float(it128[c128].mean())
-    rows.append([name, max_iter, TOL[np.complex64], TOL[np.complex128],
+    delta = {"Secant": DELTA_SECANT, "Müller": DELTA_MULLER}.get(name, "")
+    rows.append([name, max_iter, delta, TOL[np.complex64], TOL[np.complex128],
                  round(p_diff_all, 5), round(p_diff_both, 5),
                  round(100 * only64.mean(), 5), round(100 * only128.mean(), 5),
                  round(i64, 3), round(i128, 3), round(p_bd_all, 4),

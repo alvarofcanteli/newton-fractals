@@ -66,7 +66,7 @@ def run(delta):
     out = {}
     for dt, z in ((np.complex64, z64), (np.complex128, zd)):
         f, _, _, rr = make_polynomial(POLYNOMIALS["z^3 - 1"], dtype=dt)
-        out[dt] = run_basins(z, lambda s: muller_step(s, f), f, unique_roots(rr), TOL[dt], 100,
+        out[dt] = run_basins(z, lambda s: muller_step(s, f), unique_roots(rr), TOL[dt], 100,
                              init=muller_init(z, delta))
     return out
 

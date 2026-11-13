@@ -11,7 +11,7 @@ def single_point(fn):
     return lambda s: (fn(s[0]),)
 
 
-def run_basins(z0, step, f, roots, tol, max_iter, init=None):
+def run_basins(z0, step, roots, tol, max_iter, init=None):
     """Iterate `step` over the grid z0 and classify every point.
 
     `step` receives a tuple of arrays (the state of the active points) and
@@ -20,8 +20,12 @@ def run_basins(z0, step, f, roots, tol, max_iter, init=None):
     initial state (tuple of arrays with the grid shape); by default (z0,).
     Single-point methods are adapted with `single_point`.
 
+    A point converges when its distance to the nearest root is below `tol`,
+    min_r |z - r| < tol, where `roots` are the distinct roots of the polynomial
+    (see `unique_roots`). A non-finite value is FAILED.
+
     Returns (root, iters, status):
-      root   -- index of the nearest root (argmin |z - roots|), -1 if it did not converge
+      root   -- index of the nearest root (the one that triggered convergence), -1 if it did not converge
       iters  -- iteration (counting from 1) at which it converged, 0 if it did not
       status -- ACTIVE / CONVERGED / FAILED / NOT_CONVERGED
     """
@@ -51,8 +55,13 @@ def run_basins(z0, step, f, roots, tol, max_iter, init=None):
 
         # Only the points that were still active: failure if the value is not finite.
         finite = np.isfinite(z_new)
-        with np.errstate(all="ignore"):
-            conv = finite & (np.abs(f(z_new)) < tol)
+        nearest = np.zeros(z_new.shape, dtype=np.int32)
+        dist_min = np.full(z_new.shape, np.inf)
+        if finite.any():
+            dist = np.abs(z_new[finite][:, None] - roots[None, :])
+            nearest[finite] = np.argmin(dist, axis=1)
+            dist_min[finite] = dist[np.arange(dist.shape[0]), nearest[finite]]
+        conv = finite & (dist_min < tol)
 
         sub = np.full(z_new.shape, ACTIVE, dtype=np.int8)
         sub[~finite] = FAILED
@@ -63,8 +72,7 @@ def run_basins(z0, step, f, roots, tol, max_iter, init=None):
         idx = np.flatnonzero(active)[conv]
         if idx.size:
             iters.flat[idx] = it
-            dist = np.abs(z_new[conv][:, None] - roots[None, :])
-            root.flat[idx] = np.argmin(dist, axis=1)
+            root.flat[idx] = nearest[conv]
 
     status[status == ACTIVE] = NOT_CONVERGED
     return root, iters, status

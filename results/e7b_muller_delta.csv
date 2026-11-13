@@ -1,4 +1,4 @@
 delta,tol complex64,tol complex128,root differs (% of all),root differs (pixels),converged in only one (pixels),converged complex64 (%),converged complex128 (%),mean iter complex64,mean iter complex128,near boundary <=3 px: % of those that differ,near boundary <=3 px: % of all pixels,near boundary <=10 px: % of those that differ,near boundary <=10 px: % of all pixels,near boundary <=20 px: % of those that differ,near boundary <=20 px: % of all pixels
-0.1,1e-05,1e-10,0.0004,4,0,100.0,100.0,4.684,5.715,100.0,1.77,100.0,5.55,100.0,10.71
-0.01,1e-05,1e-10,0.0548,548,0,100.0,100.0,4.656,5.688,99.64,1.94,100.0,5.91,100.0,11.09
-0.001,1e-05,1e-10,6.7094,67094,0,100.0,100.0,4.706,5.688,11.35,1.96,26.09,5.96,36.97,11.16
+0.1,1e-05,1e-10,0.0004,4,0,100.0,100.0,4.543,5.642,100.0,1.77,100.0,5.55,100.0,10.71
+0.01,1e-05,1e-10,0.0548,548,0,100.0,100.0,4.511,5.613,99.64,1.94,100.0,5.91,100.0,11.09
+0.001,1e-05,1e-10,6.7094,67094,0,100.0,100.0,4.56,5.613,11.35,1.96,26.09,5.96,36.97,11.16

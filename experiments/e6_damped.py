@@ -74,7 +74,7 @@ for poly_name, file_name in POLYS:
     for h in HS:
         results.append(run_basins(
             z0, single_point(lambda z, h=h: newton_step(z, f, df, h=h)),
-            f, roots, TOL, MAX_ITER,
+            roots, TOL, MAX_ITER,
         ))
 
     iter_conv = np.concatenate([it[st == CONVERGED] for _, it, st in results])
