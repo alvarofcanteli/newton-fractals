@@ -32,7 +32,7 @@ To answer it, we compare the effect of the method, the polynomial, the damping a
 | E5b | Checks on E5: Newton on z⁵−1 with `max_iter` = 40 and 50, and where the secant method fails (inside and outside \|z₀\| < 1) | `experiments/e5b_checks.py` |
 | E6 | Damped Newton as a function of `h` and boundary complexity | `experiments/e6_damped.py` |
 | E7 | Effect of precision: complex64 versus complex128 | `experiments/e7_precision.py` |
-| E7b | Müller in E7: effect of δ and distance of the differing pixels to the boundaries (generates `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
+| E7b | Müller in E7: effect of δ and distance of the differing pixels to the boundaries (generates `results/e7b_muller_delta.csv` and `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
 
 ## Installation and usage
 
