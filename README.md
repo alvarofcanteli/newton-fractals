@@ -31,8 +31,8 @@ To answer it, we compare the effect of the method, the polynomial, the damping a
 | E5 | Comparison on z³−1, z⁴−1, z⁵−1, z⁶−1, (z−1)²(z+1) and z³−2z+2 | `experiments/e5_polynomials.py` |
 | E5b | Checks on E5: Newton on z⁵−1 with `max_iter` = 40 and 50, and where the secant method fails (inside and outside \|z₀\| < 1) | `experiments/e5b_checks.py` |
 | E6 | Damped Newton as a function of `h` and boundary complexity | `experiments/e6_damped.py` |
-| E7 | Effect of precision: complex64 versus complex128 | `experiments/e7_precision.py` |
-| E7b | Müller in E7: effect of δ and distance of the differing pixels to the boundaries (generates `results/e7b_muller_delta.csv` and `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
+| E7 | Effect of precision: complex64 versus complex128 (Müller with δ = 1e-2, secant with δ = 1e-3) | `experiments/e7_precision.py` |
+| E7b | Müller in E7: effect of δ (sweep over 1e-1, 1e-2 and 1e-3) and distance of the differing pixels to the boundaries (generates `results/e7b_muller_delta.csv` and `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
 
 ## Installation and usage
 
@@ -87,17 +87,17 @@ figures/              generated figures
 
 ## Results on z³−1
 
-Window [−2, 2]², N = 1000, tol = 1e-10 (complex128). The data come from `results/e2_cost.csv`
+Window [−2, 2]², N = 1000, tol = 1e-10 (complex128), δ = 1e-3 for the secant method and Müller. The data come from `results/e2_cost.csv`
 (iterations and evaluations), `results/e5_polynomials.csv` (% of convergence) and
 `results/e4_order.csv` (observed order: mean of the last three `p_k` of the 300-digit series).
 
 | Method | max_iter | Mean iterations | Mean evaluations | % converged | Observed order |
 |---|---|---|---|---|---|
-| Newton | 50 | 7.652 | 15.304 | 100.00 | 2.000 |
-| Halley | 50 | 4.429 | 13.286 | 100.00 | 2.996 (tends to 3) |
-| Damped Newton (h = 0.7) | 200 | 22.734 | 45.469 | 100.00 | 1 (ratio 0.3) |
-| Secant | 100 | 10.348 | 12.348 | 94.74 | 1.617 |
-| Müller | 100 | 5.688 | 8.688 | 100.00 | 1.845 |
+| Newton | 50 | 7.586 | 15.172 | 100.00 | 2.000 |
+| Halley | 50 | 4.390 | 13.169 | 100.00 | 2.996 (tends to 3) |
+| Damped Newton (h = 0.7) | 200 | 21.841 | 43.683 | 100.00 | 1 (ratio 0.3) |
+| Secant | 100 | 10.253 | 12.253 | 94.74 | 1.617 |
+| Müller | 100 | 5.613 | 8.613 | 100.00 | 1.845 |
 
 Mean iterations and evaluations are those of the converged points.
 
@@ -114,8 +114,8 @@ at the edges of the window.*
 ![Damped Newton: mean iterations and boundary fraction versus h](figures/e6_curves.png)
 
 *Damped Newton on z³−1 and z³−2z+2 (values from `results/e6_damped.csv`). On the left, the mean
-iterations of the converged points drop from 69.952 (z³−1) and 70.113 (z³−2z+2) with h = 0.3 to
-7.652 and 7.433 with h = 1. On the right, the fraction of boundary pixels grows with h: from 1.4552 %
+iterations of the converged points drop from 66.864 (z³−1) and 66.286 (z³−2z+2) with h = 0.3 to
+7.586 and 7.353 with h = 1. On the right, the fraction of boundary pixels grows with h: from 1.4552 %
 to 3.4496 % on z³−1 and from 1.1514 % to 2.8478 % on z³−2z+2, always below z³−1.*
 
 ![Failures and non-convergence on z³−2z+2](figures/e3_failures.png)
@@ -129,29 +129,35 @@ small black spot next to the real axis. Müller's boundaries appear smoother and
 
 ## Main findings
 
-1. **Cost in evaluations (E2, z³−1):** Müller (8.688) < secant (12.348) < Halley (13.286) < Newton (15.304) ≪ damped Newton with h = 0.7 (45.469).
+1. **Cost in evaluations (E2, z³−1):** Müller (8.613) < secant (12.253) < Halley (13.169) < Newton (15.172) ≪ damped Newton with h = 0.7 (43.683).
 2. **Newton's 0 ↔ 1 cycle (E3, z³−2z+2):** Newton leaves 1.06 % of the grid unconverged; Halley, damped Newton and Müller converge at every point and the secant method fails at 0.09 %.
 3. **Polynomial degree (E5):** the secant method degrades with the degree (94.74 % converged on z³−1, 79.64 % on z⁴−1, 77.46 % on z⁵−1 and 74.05 % on z⁶−1), while Müller stays above 99.6 % (minimum 99.65 % on z⁶−1).
 4. **Observed orders (E4, 300 digits):** Newton 2.000, Halley 2.996 (tends to 3), secant 1.617, Müller 1.845; damped Newton and Newton at the double root are linear, with ratios 0.3 and 0.5 respectively.
-5. **Damping (E6, z³−2z+2):** with h = 0.9 the cycle disappears (0 % unconverged versus 1.06 % with h = 1) at about 1.8 times more iterations (13.703 versus 7.433).
-6. **Precision (E7, E7b):** complex64 versus complex128 only changes pixels next to the boundaries (0.0026 % for Newton, 0 % for Halley, 0.0010 % for damped Newton and 0.155 % for the secant method), except Müller with δ = 1e-3, which differs in 6.71 % of the pixels, most of them far from the boundaries; with δ = 1e-2 it drops to 0.055 %.
+5. **Damping (E6, z³−2z+2):** with h = 0.9 the cycle disappears (0 % unconverged versus 1.06 % with h = 1) at about 1.8 times more iterations (13.143 versus 7.353).
+6. **Precision (E7, E7b):** complex64 versus complex128 changes the root almost only in pixels next to the boundaries (0.0026 % of the pixels for Newton, 0 % for Halley, 0.0010 % for damped Newton, 0.155 % for the secant method with δ = 1e-3 and 0.0548 % for Müller with δ = 1e-2). With δ = 1e-3, Müller instead differs in 6.71 % of the pixels, most of them far from the boundaries (E7b).
 
 ## Conventions and parameters
 
 - **Window and grid:** [−2, 2]² with N × N points (N = 1000, except in E1, which uses 250, 500, 1000 and 2000).
-- **Stopping criterion:** a point converges when `|f(z)| < tol` at the current iteration. If the new
-  value is not finite (inf or NaN) the point is marked as **failed**; if `max_iter` is exhausted,
-  as **not converged**. The assigned root is the nearest one (`argmin |z − root|`) among the
-  distinct roots of `np.roots`, merging almost identical roots (double roots) with `unique_roots`.
+- **Stopping criterion:** a point converges when its distance to the nearest root is below `tol` at the
+  current iteration, `min_r |z − r| < tol`. The roots `r` are the distinct roots of `np.roots`, merging almost
+  identical roots (double roots) with `unique_roots`, and the root assigned to a converged point is that
+  nearest root. If the new value is not finite (inf or NaN) the point is marked as **failed**; if `max_iter`
+  is exhausted, as **not converged**. This replaces the earlier criterion `|f(z)| < tol`: on z³−1 and
+  z³−2z+2 the basins are identical pixel by pixel and only the iteration counts change (slightly fewer).
+  For the double root of (z−1)²(z+1) the attainable accuracy of z is of the order of √ε ≈ 1.5e-8, close to
+  its `tol` of 1e-8, so with this criterion some points are not classified as converged (E5: 0.1057 % for
+  Newton; 0.0336 % and 0.0772 % failed for the secant method and Müller).
 - **Tolerances:** `1e-10` in complex128; `1e-5` in complex64 (E7, about 84 times the machine epsilon
   of 1.2e-7); `1e-8` for the double-root polynomial (E5). E4 works with mpmath at 300 digits
   and stops when the error drops below `1e-250`.
 - **`max_iter`:** 50 for Newton and Halley, 200 for damped Newton (300 in E6), 100 for the secant
   and Müller.
-- **δ of the secant method and Müller:** `δ = 1e-3`, except in E7b, which tries 1e-2 and 1e-1. With δ = 1e-3,
-  Müller in complex64 differs from complex128 in 6.7 % of the pixels because δ is too small for that
-  precision (the rounding error of the second divided difference is of order ε/δ²); with δ = 1e-2 the
-  difference drops to 0.055 %.
+- **δ of the secant method and Müller:** `δ = 1e-3` everywhere, except in E7, where Müller uses `δ = 1e-2`
+  in both complex64 and complex128 (the secant method stays at 1e-3). E7b keeps its sweep over 1e-1, 1e-2
+  and 1e-3 as the diagnostic: with δ = 1e-3, Müller in complex64 differs from complex128 in 6.7 % of the
+  pixels because δ is too small for that precision (the rounding error of the second divided difference is
+  of order ε/δ²); with δ = 1e-2 the difference drops to 0.055 %.
 - **Cost per step and initial evaluations:**
   Newton 2 evaluations per step (f, f'), Halley 3 (f, f', f''), damped Newton 2,
   secant 1 plus 2 initial, Müller 1 plus 3 initial. Evaluations per point =

@@ -21,12 +21,12 @@ of rootfinding methods". Methods: Newton, Halley, damped Newton, secant and Mül
   converged points of all methods in the same figure), so brightness is comparable across panels.
 - **Colours:** one hue per root; non-converged (and failed) points are drawn in black.
 - **Statuses:** `ACTIVE` / `CONVERGED` / `FAILED` / `NOT_CONVERGED` (see `runner.py`). A point converges
-  when `|f(z)| < tol`; a non-finite value is `FAILED`; running out of `max_iter` is `NOT_CONVERGED`.
+  when `|z - r| < tol` for its nearest distinct root `r`; a non-finite value is `FAILED`; running out of `max_iter` is `NOT_CONVERGED`.
 - **Cost:** counted as evaluations of f (and its derivatives), including the initial evaluations of each
   method: Newton 2 per step, Halley 3, damped Newton 2, secant 1 per step + 2 initial, Müller 1 per step + 3 initial.
 - **Means** (iterations, evaluations) are computed only over converged points.
 - **Initial points of secant and Müller:** secant starts from `(z0 + δ, z0)`, Müller from
-  `(z0, z0 + δ, z0 + 2δ)`, with `δ = 1e-3` unless an experiment says otherwise (E7b tries 1e-2 and 1e-1).
+  `(z0, z0 + δ, z0 + 2δ)`, with `δ = 1e-3` unless an experiment says otherwise (E7 uses 1e-2 for Müller; E7b sweeps 1e-1, 1e-2 and 1e-3).
   Always state δ when reporting results for these methods.
 - **Numbers:** use a decimal point, not a comma (7.652, not 7,652).
 
@@ -73,8 +73,10 @@ experiments table, and `python -m pytest` passing.
 - Ask before deleting or renaming files.
 - Do not add dependencies without asking.
 
-## Open team decisions
+## Team decisions
 
-- Stopping criterion: `|f(z)| < tol` is the current convention, but it is not yet agreed by the team
-  (the alternative is `|z - r| < tol`).
-- δ: `1e-3` is the default, but Müller in complex64 needs `δ = 1e-2` (see E7b).
+- **Stopping criterion:** `|z - r| < tol`, where `r` is the nearest distinct root (from `unique_roots`); that
+  root is the one assigned to the point. The tolerances do not change (1e-10 in complex128, 1e-5 in complex64,
+  1e-8 for the double-root polynomial).
+- **δ:** `1e-3` everywhere, except E7, where Müller uses `δ = 1e-2` in both complex64 and complex128 (secant
+  stays at `1e-3`). E7b keeps its sweep over `1e-1`, `1e-2` and `1e-3` as the diagnostic.
