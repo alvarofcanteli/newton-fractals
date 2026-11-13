@@ -43,9 +43,9 @@ grids = {np.complex64: z0_c64, np.complex128: z0_double}
 print("Tolerances and machine epsilon:")
 for dt in (np.complex64, np.complex128):
     print(f"  {np.dtype(dt).name}: eps = {EPS[dt]:.2e}, tol = {TOL[dt]:.0e} = {TOL[dt] / EPS[dt]:.1e} eps. "
-          "Evaluating f near a simple root has a noise floor of a few eps; "
+          "Near a simple root the rounding error of z is a few eps (the roots have modulus about 1); "
           "tol is well above that floor (so that rounding noise is not reported as 'not converged') "
-          "and well below the scale of f on the grid (O(1)).")
+          "and well below the distance between roots (O(1)).")
 
 coef = POLYNOMIALS["z^3 - 1"]
 systems = {}
