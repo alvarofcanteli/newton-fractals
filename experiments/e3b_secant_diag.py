@@ -17,7 +17,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import secant_init, secant_step  # noqa: E402
-from nfractals.plotting import plot_basins  # noqa: E402
+from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
 from nfractals.runner import CONVERGED, FAILED, NOT_CONVERGED, run_basins  # noqa: E402
 
@@ -76,7 +76,7 @@ if z.size:
 fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
 root, iters, st = res[400]
 plot_basins(root, iters, st, len(roots), ax=ax, iter_ref=ITER_REF)
-ax.set_title("Secant, z^3 - 1, max_iter=400")
+ax.set_title(f"Secant, {poly_latex('z^3 - 1')}, max_iter=400")
 output = PROJECT_ROOT / "figures" / "diag_secant.png"
 fig.savefig(output, dpi=100, bbox_inches="tight")
 print(f"Figure saved to {output}")

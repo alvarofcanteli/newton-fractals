@@ -6,6 +6,21 @@ from nfractals.runner import CONVERGED
 # Minimum brightness of a converged point (pure black is reserved for points that do not converge).
 MIN_BRIGHTNESS = 0.35
 
+# Mathtext names of the polynomials of `POLYNOMIALS`, for figure titles and legends.
+POLY_LATEX = {
+    "z^3 - 1": r"$z^3-1$",
+    "z^3 - 2z + 2": r"$z^3-2z+2$",
+    "(z-1)^2 (z+1)": r"$(z-1)^2(z+1)$",
+    "z^4 - 1": r"$z^4-1$",
+    "z^5 - 1": r"$z^5-1$",
+    "z^6 - 1": r"$z^6-1$",
+}
+
+
+def poly_latex(name):
+    """Mathtext version of a polynomial name from `POLYNOMIALS` (the name itself if unknown)."""
+    return POLY_LATEX.get(name, name)
+
 
 def plot_basins(root, iters, status, n_roots, ax=None, iter_ref=None):
     """Return an RGB image (height, width, 3) of the basins.

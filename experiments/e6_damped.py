@@ -13,7 +13,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import newton_step  # noqa: E402
-from nfractals.plotting import plot_basins  # noqa: E402
+from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial, unique_roots  # noqa: E402
 from nfractals.runner import CONVERGED, FAILED, NOT_CONVERGED, run_basins, single_point  # noqa: E402
 
@@ -108,7 +108,7 @@ for poly_name, file_name in POLYS:
     for ax, h, (root, iters, status) in zip(axes, HS, results):
         plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
         ax.set_title(f"h = {h:g}", fontsize=10)
-    fig.suptitle(f"Damped Newton on {poly_name} (tol={TOL:g}, max_iter={MAX_ITER}, "
+    fig.suptitle(f"Damped Newton on {poly_latex(poly_name)} (tol={TOL:g}, max_iter={MAX_ITER}, "
                  f"iter_ref={iter_ref:.1f})")
     output_fig = PROJECT_ROOT / "figures" / f"e6_maps_{file_name}.png"
     fig.savefig(output_fig, dpi=100, bbox_inches="tight")
@@ -116,8 +116,8 @@ for poly_name, file_name in POLYS:
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5), constrained_layout=True)
 for poly_name, (means, boundaries) in curves.items():
-    ax1.plot(HS, means, marker="o", label=poly_name)
-    ax2.plot(HS, boundaries, marker="o", label=poly_name)
+    ax1.plot(HS, means, marker="o", label=poly_latex(poly_name))
+    ax2.plot(HS, boundaries, marker="o", label=poly_latex(poly_name))
 ax1.set_xlabel("h")
 ax1.set_ylabel("mean iterations (converged)")
 ax2.set_xlabel("h")

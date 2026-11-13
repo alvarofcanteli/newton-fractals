@@ -20,7 +20,7 @@ from nfractals.methods import (  # noqa: E402
     secant_init,
     secant_step,
 )
-from nfractals.plotting import plot_basins  # noqa: E402
+from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
 from nfractals.runner import (  # noqa: E402
     CONVERGED,
@@ -115,6 +115,7 @@ fig, axes = plt.subplots(1, len(methods), figsize=(6 * len(methods), 6), constra
 for ax, (name, _, max_iter, _), (root, iters, status) in zip(axes, methods, results):
     plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
     ax.set_title(f"{name}, max_iter={max_iter}")
+fig.suptitle(f"{poly_latex('z^3 - 2z + 2')} on [−2, 2]², N = {N} (tol={TOL:g}, iter_ref={iter_ref})")
 
 output_fig = PROJECT_ROOT / "figures" / "e3_failures.png"
 fig.savefig(output_fig, dpi=100, bbox_inches="tight")

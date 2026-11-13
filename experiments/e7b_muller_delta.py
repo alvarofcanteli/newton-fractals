@@ -20,6 +20,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import muller_init, muller_step  # noqa: E402
+from nfractals.plotting import poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial, unique_roots  # noqa: E402
 from nfractals.runner import CONVERGED, run_basins  # noqa: E402
 
@@ -111,8 +112,8 @@ for delta in (1e-1, 1e-2, 1e-3):
         ax.imshow(pixel_map, origin="lower", interpolation="nearest",
                   cmap=ListedColormap(["white", "#dddddd", "#d62728", "#1f77b4"]), vmin=0, vmax=3)
         ax.set_axis_off()
-        ax.set_title(f"Müller δ=1e-3, z^3 - 1: complex64 vs complex128 ({diff.sum()} pixels with a different root)\n"
-                     "grey: within 3 px of another root; red: different root; blue: converges in only one",
+        ax.set_title(f"Müller δ=1e-3, {poly_latex('z^3 - 1')}: complex64 vs complex128 ({diff.sum()} pixels with a different root)\n"
+                     "grey: within 3 px of a basin boundary; red: different root; blue: converges in only one",
                      fontsize=10)
         output = PROJECT_ROOT / "figures" / "e7_diff_muller.png"
         fig.savefig(output, dpi=110, bbox_inches="tight")

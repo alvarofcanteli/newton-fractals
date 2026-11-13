@@ -20,7 +20,7 @@ from nfractals.methods import (  # noqa: E402
     secant_init,
     secant_step,
 )
-from nfractals.plotting import plot_basins  # noqa: E402
+from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial, unique_roots  # noqa: E402
 from nfractals.runner import (  # noqa: E402
     CONVERGED,
@@ -111,7 +111,12 @@ for poly_name, file_name, tol in POLYS:
     for ax, (name, _, max_iter, *_), (root, iters, status) in zip(axes, methods, results):
         plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
         ax.set_title(f"{name}, max_iter={max_iter}", fontsize=9)
-    fig.suptitle(f"{poly_name} (tol={tol:g}, iter_ref={iter_ref})")
+    title = f"{poly_latex(poly_name)} (tol={tol:g}, iter_ref={iter_ref})"
+    if poly_name == "(z-1)^2 (z+1)":
+        # Hue = root index / number of roots (see plot_basins): index 0 -> red, index 1 -> cyan/teal.
+        assert np.isclose(roots[0], -1) and np.isclose(roots[1], 1) and len(roots) == 2
+        title += "\ncolours: red = root $z=-1$, teal = root $z=1$; black = not converged"
+    fig.suptitle(title)
     output_fig = PROJECT_ROOT / "figures" / f"e5_{file_name}.png"
     fig.savefig(output_fig, dpi=100, bbox_inches="tight")
     plt.close(fig)
