@@ -92,7 +92,7 @@ columns = [
     "near boundary: % of those that differ in anything",
 ]
 rows = []
-res = {dt: [run_basins(grids[dt], step, systems[dt][0], systems[dt][3], TOL[dt], mi, init=init)
+res = {dt: [run_basins(grids[dt], step, systems[dt][3], TOL[dt], mi, init=init)
             for _, step, mi, init in methods_for(dt)]
        for dt in (np.complex64, np.complex128)}
 

@@ -20,7 +20,7 @@ x = np.linspace(-2, 2, N)
 z0 = x[None, :] + 1j * x[:, None]
 
 root, iters, status = run_basins(
-    z0, single_point(lambda z: newton_step(z, f, df)), f, roots, TOL, MAX_ITER
+    z0, single_point(lambda z: newton_step(z, f, df)), roots, TOL, MAX_ITER
 )
 
 img = plot_basins(root, iters, status, len(roots))

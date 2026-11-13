@@ -59,7 +59,7 @@ STATUS_NAMES = {
 fig, axes = plt.subplots(1, len(methods), figsize=(6 * len(methods), 6), constrained_layout=True)
 
 results = [
-    run_basins(z0, step, f, roots, TOL, max_iter, init=init)
+    run_basins(z0, step, roots, TOL, max_iter, init=init)
     for _, step, max_iter, init in methods
 ]
 

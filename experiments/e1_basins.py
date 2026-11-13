@@ -58,7 +58,7 @@ for name, step, max_iter, init in methods:
         x = np.linspace(-2, 2, n)
         z0 = x[None, :] + 1j * x[:, None]
         root, _, status = run_basins(
-            z0, step, f, roots, TOL, max_iter, init=None if init is None else init(z0)
+            z0, step, roots, TOL, max_iter, init=None if init is None else init(z0)
         )
 
         windows = [

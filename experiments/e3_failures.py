@@ -54,7 +54,7 @@ methods = [
 ]
 
 results = [
-    run_basins(z0, step, f, roots, TOL, max_iter, init=init)
+    run_basins(z0, step, roots, TOL, max_iter, init=init)
     for _, step, max_iter, init in methods
 ]
 

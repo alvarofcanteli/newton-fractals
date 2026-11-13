@@ -58,7 +58,7 @@ columns = [
 rows = []
 iterations = []
 for name, step, max_iter, cost, ini, init in methods:
-    _, iters, status = run_basins(z0, step, f, roots, TOL, max_iter, init=init)
+    _, iters, status = run_basins(z0, step, roots, TOL, max_iter, init=init)
     it = iters[status == CONVERGED]
     iterations.append(it)
     rows.append([

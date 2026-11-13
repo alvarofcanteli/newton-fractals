@@ -1,6 +1,6 @@
 method,max_iter,tol complex64,tol complex128,root differs (% of all),root differs (% of those converged in both),converged only in complex64 (%),converged only in complex128 (%),mean iter complex64,mean iter complex128,near boundary: % of all pixels,near boundary: % of those that differ in root,near boundary: % of those that differ in anything
-Newton,50,1e-05,1e-10,0.0026,0.0026,0.0,0.0,6.715,7.652,8.1578,100.0,100.0
-Halley,50,1e-05,1e-10,0.0,0.0,0.0,0.0,3.837,4.429,2.78,nan,nan
-Damped Newton (h=0.7),200,1e-05,1e-10,0.001,0.001,0.0,0.0,13.216,22.734,6.0732,100.0,100.0
-Secant,100,1e-05,1e-10,0.155,0.16369,0.0522,0.0468,9.011,10.348,9.2176,100.0,79.4488
-Müller,100,1e-05,1e-10,6.7094,6.7094,0.0,0.0,4.706,5.688,1.959,11.3483,11.3483
+Newton,50,1e-05,1e-10,0.0026,0.0026,0.0,0.0,6.586,7.586,8.1578,100.0,100.0
+Halley,50,1e-05,1e-10,0.0,0.0,0.0,0.0,3.755,4.39,2.78,nan,nan
+Damped Newton (h=0.7),200,1e-05,1e-10,0.001,0.001,0.0,0.0,12.295,21.841,6.0732,100.0,100.0
+Secant,100,1e-05,1e-10,0.155,0.16369,0.0522,0.047,8.821,10.254,9.2178,100.0,79.465
+Müller,100,1e-05,1e-10,6.7094,6.7094,0.0,0.0,4.56,5.613,1.959,11.3483,11.3483

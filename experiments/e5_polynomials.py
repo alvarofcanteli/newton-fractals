@@ -79,7 +79,7 @@ for poly_name, file_name, tol in POLYS:
         ("Müller", lambda s: muller_step(s, f), 100, 1, 3, muller_init(z0, DELTA)),
     ]
     results = [
-        run_basins(z0, step, f, roots, tol, max_iter, init=init)
+        run_basins(z0, step, roots, tol, max_iter, init=init)
         for _, step, max_iter, _, _, init in methods
     ]
 
