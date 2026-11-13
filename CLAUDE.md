@@ -41,7 +41,7 @@ of rootfinding methods". Methods: Newton, Halley, damped Newton, secant and Mül
 ## Pitfalls to avoid
 
 - Never claim the basins of zⁿ−1 must be equal in a square window; that holds only in a disk (the square breaks the symmetry).
-- Never use the same tolerance in float32 and float64 (E7 uses 1e-5 and 1e-10), nor a tolerance that is unreachable for multiple roots (E5 uses 1e-8 for the double root).
+- Never use the same tolerance in float32 and float64 (E7 uses 1e-5 and 1e-10), nor a tolerance that is unreachable for multiple roots (E5 uses 1e-6 for the double root; 1e-8 is at the numerical floor under the `|z - r|` criterion).
 - Never estimate the order of convergence in double precision when the error is already at the numerical floor; use mpmath (E4).
 - Never compare methods by iterations only; also count evaluations of f.
 - Always document the initial-points convention (δ) of secant and Müller.
@@ -76,7 +76,7 @@ experiments table, and `python -m pytest` passing.
 ## Team decisions
 
 - **Stopping criterion:** `|z - r| < tol`, where `r` is the nearest distinct root (from `unique_roots`); that
-  root is the one assigned to the point. The tolerances do not change (1e-10 in complex128, 1e-5 in complex64,
-  1e-8 for the double-root polynomial).
+  root is the one assigned to the point. Tolerances: 1e-10 in complex128, 1e-5 in complex64 and 1e-6 for the
+  double-root polynomial (see the pitfalls).
 - **δ:** `1e-3` everywhere, except E7, where Müller uses `δ = 1e-2` in both complex64 and complex128 (secant
   stays at `1e-3`). E7b keeps its sweep over `1e-1`, `1e-2` and `1e-3` as the diagnostic.

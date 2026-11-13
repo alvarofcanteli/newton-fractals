@@ -41,7 +41,7 @@ POLYS = [
     ("z^4 - 1", "z4_minus_1", 1e-10),
     ("z^5 - 1", "z5_minus_1", 1e-10),
     ("z^6 - 1", "z6_minus_1", 1e-10),
-    ("(z-1)^2 (z+1)", "double_root", 1e-8),
+    ("(z-1)^2 (z+1)", "double_root", 1e-6),
     ("z^3 - 2z + 2", "z3_minus_2z_plus_2", 1e-10),
 ]
 

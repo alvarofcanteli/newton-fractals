@@ -145,11 +145,13 @@ small black spot next to the real axis. Müller's boundaries appear smoother and
   nearest root. If the new value is not finite (inf or NaN) the point is marked as **failed**; if `max_iter`
   is exhausted, as **not converged**. This replaces the earlier criterion `|f(z)| < tol`: on z³−1 and
   z³−2z+2 the basins are identical pixel by pixel and only the iteration counts change (slightly fewer).
-  For the double root of (z−1)²(z+1) the attainable accuracy of z is of the order of √ε ≈ 1.5e-8, close to
-  its `tol` of 1e-8, so with this criterion some points are not classified as converged (E5: 0.1057 % for
-  Newton; 0.0336 % and 0.0772 % failed for the secant method and Müller).
+  At the double root of (z−1)²(z+1) the attainable accuracy of z is of the order of √ε ≈ 1.5e-8 (the
+  rounding noise of f near a double root), so a tolerance of 1e-8 sits at the numerical floor: with it,
+  0.1057 % of the points of Newton were not classified as converged and the secant method and Müller had
+  0.0336 % and 0.0772 % of failed points. For that reason E5 uses `tol = 1e-6` for this polynomial, safely
+  above the floor.
 - **Tolerances:** `1e-10` in complex128; `1e-5` in complex64 (E7, about 84 times the machine epsilon
-  of 1.2e-7); `1e-8` for the double-root polynomial (E5). E4 works with mpmath at 300 digits
+  of 1.2e-7); `1e-6` for the double-root polynomial (E5). E4 works with mpmath at 300 digits
   and stops when the error drops below `1e-250`.
 - **`max_iter`:** 50 for Newton and Halley, 200 for damped Newton (300 in E6), 100 for the secant
   and Müller.
