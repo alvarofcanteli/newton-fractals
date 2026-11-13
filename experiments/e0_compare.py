@@ -19,7 +19,7 @@ from nfractals.methods import (  # noqa: E402
     secant_init,
     secant_step,
 )
-from nfractals.plotting import plot_basins  # noqa: E402
+from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
 from nfractals.runner import (  # noqa: E402
     ACTIVE,
@@ -68,6 +68,7 @@ iter_ref = np.percentile(
     np.concatenate([it[st == CONVERGED] for _, it, st in results]), 99
 )
 print(f"Common iter_ref (99th percentile): {iter_ref:.2f}")
+fig.suptitle(f"{poly_latex('z^3 - 1')} on [−2, 2]², N = {N} (tol={TOL:g}, iter_ref={iter_ref})")
 
 for ax, (name, _, max_iter, _), (root, iters, status) in zip(axes, methods, results):
     plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)

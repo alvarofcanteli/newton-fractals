@@ -20,6 +20,7 @@ from nfractals.methods import (  # noqa: E402
     secant_init,
     secant_step,
 )
+from nfractals.plotting import poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
 from nfractals.runner import CONVERGED, run_basins, single_point  # noqa: E402
 
@@ -104,6 +105,7 @@ for ax, (name, _, max_iter, *_), it in zip(axes, methods, iterations):
     ax.set_ylabel("points")
 axes[-1].set_xlabel("iterations to converge")
 axes[-1].set_xlim(0, it_max + 1)
+fig.suptitle(f"Iterations to converge, {poly_latex('z^3 - 1')} on [−2, 2]², N = {N} (tol={TOL:g})")
 
 output_fig = PROJECT_ROOT / "figures" / "e2_hist.png"
 fig.savefig(output_fig, dpi=100, bbox_inches="tight")

@@ -21,6 +21,7 @@ from nfractals.methods import (  # noqa: E402
     secant_init,
     secant_step,
 )
+from nfractals.plotting import poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial, unique_roots  # noqa: E402
 from nfractals.runner import CONVERGED, run_basins, single_point  # noqa: E402
 
@@ -139,7 +140,7 @@ for i, (name, _, max_iter, _) in enumerate(methods_for(np.complex128)):
         ax.imshow(pixel_map, origin="lower", interpolation="nearest",
                   cmap=ListedColormap(["white", "#dddddd", "#d62728", "#1f77b4"]), vmin=0, vmax=3)
         ax.set_axis_off()
-        ax.set_title(f"Newton, z^3 - 1: complex64 vs complex128 ({diff_root.sum()} pixels with a different root, "
+        ax.set_title(f"Newton, {poly_latex('z^3 - 1')}: complex64 vs complex128 ({diff_root.sum()} pixels with a different root, "
                      f"{(only64 | only128).sum()} converged in only one)\n"
                      f"grey: within {BOUNDARY_RADIUS} px of another root; red: different root; "
                      "blue: converges in only one",

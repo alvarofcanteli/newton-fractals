@@ -1,12 +1,15 @@
 from pathlib import Path
 
-import numpy as np
-from matplotlib.image import imsave
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from nfractals.methods import newton_step  # noqa: E402
-from nfractals.plotting import plot_basins  # noqa: E402
+from nfractals.plotting import plot_basins, poly_latex  # noqa: E402
 from nfractals.polynomials import POLYNOMIALS, make_polynomial  # noqa: E402
 from nfractals.runner import CONVERGED, run_basins, single_point  # noqa: E402
 
@@ -23,13 +26,19 @@ root, iters, status = run_basins(
     z0, single_point(lambda z: newton_step(z, f, df)), roots, TOL, MAX_ITER
 )
 
-img = plot_basins(root, iters, status, len(roots))
+conv = status == CONVERGED
+iter_ref = np.percentile(iters[conv], 99)  # same default as plot_basins
+
+fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+plot_basins(root, iters, status, len(roots), ax=ax, iter_ref=iter_ref)
+ax.set_title(f"Newton, {poly_latex('z^3 - 1')} on [−2, 2]², N = {N} "
+             f"(tol={TOL:g}, max_iter={MAX_ITER}, iter_ref={iter_ref:g})", fontsize=10)
 
 output = PROJECT_ROOT / "figures" / "e0_newton_z3.png"
-imsave(output, img, origin="lower")
-print(f"Image saved to {output}")
+fig.savefig(output, dpi=100, bbox_inches="tight")
+plt.close(fig)
+print(f"Figure saved to {output}")
 
-conv = status == CONVERGED
 print(f"Converged points: {conv.sum() / conv.size:.2%} of the total")
 for k, r in enumerate(roots):
     print(f"Root {k} ({r.real:+.4f}{r.imag:+.4f}j): {np.sum(root == k) / conv.sum():.2%}")
