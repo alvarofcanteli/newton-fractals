@@ -31,6 +31,17 @@ def unity_poly(n):
     return c
 
 
+def random_poly(seed=2026, degree=5, r_min=0.3, r_max=1.5):
+    """Polynomial with random roots: moduli uniform in [r_min, r_max), angles uniform in [0, 2*pi),
+    drawn in this order from np.random.default_rng(seed). Returns (coefficients, generating roots);
+    the coefficients are complex, monic, from highest to lowest degree (np.poly)."""
+    rng = np.random.default_rng(seed)
+    moduli = rng.uniform(r_min, r_max, degree)
+    angles = rng.uniform(0, 2 * np.pi, degree)
+    roots = moduli * np.exp(1j * angles)
+    return np.poly(roots), roots
+
+
 def unique_roots(roots, tol=1e-6):
     """Merge into a single root (by averaging) those closer than `tol` to each other.
 
@@ -65,4 +76,7 @@ POLYNOMIALS = {
     "z^4 - 1": unity_poly(4),
     "z^5 - 1": unity_poly(5),
     "z^6 - 1": unity_poly(6),
+    "z^8 - 1": unity_poly(8),
+    "(z-1)(z+1)(z-1.01)": np.poly([1, -1, 1.01]).tolist(),
+    "random degree 5": random_poly()[0],
 }
