@@ -10,8 +10,8 @@ in English, whatever language the user writes to you in.
 Numerical Methods final project (IE University): "Newton fractals: basins of attraction and reliability
 of rootfinding methods". Methods: Newton, Halley, damped Newton, secant and Müller.
 
-- `src/nfractals/`: the package (`methods.py`, `runner.py`, `polynomials.py`, `plotting.py`, `metrics.py`, `convergence.py`).
-- `experiments/`: one script per experiment, E0–E9, plus the diagnostic scripts E3b, E5b, E5c and E7b.
+- `src/nfractals/`: the package (`methods.py`, `runner.py`, `polynomials.py`, `plotting.py`, `metrics.py`, `functions.py`, `convergence.py`).
+- `experiments/`: one script per experiment, E0–E10, plus the diagnostic scripts E3b, E5b, E5c and E7b.
 - `results/`: CSV output of the experiments. `figures/`: generated figures.
 - `tests/`: pytest validation tests. Install with `pip install -e .`.
 
@@ -22,6 +22,7 @@ of rootfinding methods". Methods: Newton, Halley, damped Newton, secant and Mül
 - **Colours:** one hue per root; non-converged (and failed) points are drawn in black.
 - **Statuses:** `ACTIVE` / `CONVERGED` / `FAILED` / `NOT_CONVERGED` (see `runner.py`). A point converges
   when `|z - r| < tol` for its nearest distinct root `r`; a non-finite value is `FAILED`; running out of `max_iter` is `NOT_CONVERGED`.
+  `run_basins` also accepts a nearest-root callable instead of an array of roots (E10, non-polynomial functions, an extension beyond the course guide).
 - **Cost:** counted as evaluations of f (and its derivatives), including the initial evaluations of each
   method: Newton 2 per step, Halley 3, damped Newton 2, secant 1 per step + 2 initial, Müller 1 per step + 3 initial.
 - **Means** (iterations, evaluations) are computed only over converged points.

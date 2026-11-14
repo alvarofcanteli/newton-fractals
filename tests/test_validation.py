@@ -164,3 +164,54 @@ def test_boundary_fraction_of_two_half_planes_is_about_two_over_n():
     # Non-converged pixels are not counted.
     status[: n // 2, :] = 0
     assert np.isclose(boundary_fraction(root, status), 1 / n)
+
+# ---------------------------------------------------------------------------
+# E10: non-polynomial functions and the callable interface of run_basins
+# ---------------------------------------------------------------------------
+
+
+def test_sin_nearest_root_and_id():
+    from nfractals.functions import sin_nearest
+
+    z = np.array([0.1, 3.0 + 0.5j, -1.0, -5.0, 1.5 + 10j, 2 * np.pi + 0.2j])
+    ids, dist = sin_nearest(z)
+    assert ids.tolist() == [0, 1, 0, -2, 0, 2]
+    assert np.allclose(dist, np.abs(z - ids * np.pi))
+
+
+def test_lambert_roots_are_roots_of_exp_minus_z():
+    from nfractals.functions import lambert_roots
+
+    ks, roots = lambert_roots()
+    assert len(roots) == 41
+    assert np.all(np.abs(np.exp(roots) - roots) < 1e-12)
+    # in [-3, 3]^2 the roots are 0.318 +- 1.337i
+    inside = roots[(np.abs(roots.real) < 3) & (np.abs(roots.imag) < 3)]
+    assert len(inside) == 2 and np.allclose(sorted(inside.imag), [-1.3372, 1.3372], atol=1e-4)
+    assert np.allclose(inside.real, 0.3181, atol=1e-4)
+
+
+def test_newton_on_sin_from_0_1_converges_to_zero():
+    from nfractals.functions import sin_nearest
+
+    z0 = np.array([[0.1 + 0j]])
+    root, iters, status = run_basins(
+        z0, single_point(lambda z: newton_step(z, np.sin, np.cos)), sin_nearest, 1e-10, 50)
+    assert status[0, 0] == CONVERGED and root[0, 0] == 0 and iters[0, 0] <= 6
+
+
+def test_run_basins_with_callable_matches_array_of_roots():
+    f, df, _, roots_np = make_polynomial(POLYNOMIALS["z^3 - 1"])
+    roots = unique_roots(roots_np)
+
+    def nearest(z):
+        d = np.abs(z[:, None] - roots[None, :])
+        j = np.argmin(d, axis=1)
+        return j, d[np.arange(j.size), j]
+
+    x = np.linspace(-2, 2, 40)
+    z0 = x[None, :] + 1j * x[:, None]
+    step = single_point(lambda z: newton_step(z, f, df))
+    a = run_basins(z0, step, roots, 1e-10, 50)
+    b = run_basins(z0, step, nearest, 1e-10, 50)
+    assert all(np.array_equal(u, v) for u, v in zip(a, b))

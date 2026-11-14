@@ -36,6 +36,7 @@ To answer it, we compare the effect of the method, the polynomial, the damping a
 | E7b | Müller in E7: effect of δ (sweep over 1e-1, 1e-2 and 1e-3) and distance of the differing pixels to the boundaries (generates `results/e7b_muller_delta.csv` and `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
 | E8 | Boundary of the basins of the five methods on z³−1 and z³−2z+2 at N = 250, 500, 1000 and 2000: boundary pixels, fraction, and slope of log(boundary pixels) against log(N) as a rough box-counting dimension (generates `results/e8_boundary.csv`, `results/e8_boundary_slope.csv` and `figures/e8_boundary.png`) | `experiments/e8_boundary.py` |
 | E9 | Five methods on three more polynomials: z⁸−1, (z−1)(z+1)(z−1.01) (two close roots) and a degree-5 polynomial with random roots (`np.random.default_rng(2026)`, roots saved in the CSV); includes the boundary fraction (generates `results/e9_new_polynomials.csv` and `figures/e9_*.png`) | `experiments/e9_new_polynomials.py` |
+| E10 | **Extension beyond the polynomial scope of the course guide:** the comparison of E5 on two non-polynomial functions, sin z (window [−5, 5]²) and eᶻ−z (window [−3, 3]²) (generates `results/e10_non_polynomials.csv` and `figures/e10_*.png`) | `experiments/e10_non_polynomials.py` |
 
 ## Installation and usage
 
@@ -71,6 +72,7 @@ python experiments/e7_precision.py
 python experiments/e7b_muller_delta.py
 python experiments/e8_boundary.py
 python experiments/e9_new_polynomials.py
+python experiments/e10_non_polynomials.py
 ```
 
 > **Note:** `results/` and `figures/` are already in the repository, so there is no need to re-run
@@ -84,9 +86,10 @@ src/nfractals/
     runner.py         run_basins: iterates the grid with per-method state and classifies the points
     polynomials.py    polynomials, derivatives, reference roots (unique_roots, unity_poly)
     plotting.py       basin maps (hue = root, brightness = iterations)
+    functions.py      non-polynomial functions for E10 (sin z, e^z - z) with their nearest-root rule
     metrics.py        boundary of the basins (boundary_mask, boundary_fraction; used by E6 and E8)
     convergence.py    scalar mpmath versions to measure orders of convergence
-experiments/          one script per experiment (E0 to E9) and the diagnostic ones (E3b, E5b, E5c, E7b)
+experiments/          one script per experiment (E0 to E10) and the diagnostic ones (E3b, E5b, E5c, E7b)
 tests/                validation tests (pytest)
 results/              CSV tables of the experiments
 figures/              generated figures
@@ -162,6 +165,21 @@ small black spot next to the real axis. Müller's boundaries appear smoother and
    ![Basins of z⁸−1 with the five methods](figures/e9_z8_minus_1.png)
 
    *Basins of z⁸−1 on [−2, 2]², N = 1000, tol = 1e-10, from left to right: Newton, Halley, damped Newton, secant and Müller, with a common `iter_ref`. One colour per root, brightness drops with the iterations, black = not converged or failed. Figures `figures/e9_close_roots.png` and `figures/e9_random_deg5.png` use the same layout.*
+9. **Non-polynomial functions (E10, an extension beyond the polynomial scope of the course guide; `results/e10_non_polynomials.csv`; N = 1000, tol = 1e-10, δ = 1e-3, same `max_iter` as E5):**
+   - *sin z on [−5, 5]²* (roots kπ; reference root = nearest kπ, exact): % converged Newton 99.98, Halley 100.00, damped Newton 100.00, secant 99.78, Müller 100.00; % failed 0 for all except the secant method (0.05). Boundary fraction (%): Newton 3.413, Halley 3.764, damped Newton 2.331, secant 3.367 (99.78 % converged), Müller 1.704. Mean evaluations: secant 10.630, Müller 11.722, Newton 12.952, Halley 14.547, damped Newton 46.052.
+   - *eᶻ−z on [−3, 3]²* (the roots are z_k = −W_k(−1); the reference roots are those with |k| ≤ 20, and in the window the only ones are 0.3181 ± 1.3372i): % converged Newton 99.18 (0.60 % failed, 0.21 % not converged, 0.01 % converged to an unlisted root), Halley 99.99, damped Newton 100.00, secant 99.90 (0.02 % failed), Müller 100.00. Boundary fraction (%): Newton 1.039, Halley 0.632, damped Newton 0.391, secant 0.911 (99.90 % converged), Müller 0.462. Mean evaluations: Müller 9.417, secant 11.286, Halley 12.144, Newton 13.795, damped Newton 42.160.
+   - *Where Newton fails (eᶻ−z).* The 6022 failed pixels (0.60 %) lie in a thin strip around the real axis: 91.9 % have |Im z₀| < 0.3, and eᶻ−z has no real root. Within that strip the failed fraction is 34.6 % for Re z₀ in [−3, −2.5), against 1.8 % to 5.2 % for the other Re ranges, and 57.0 % of all failed pixels have Re z₀ < −2. For Re z₀ ≈ −2.7, f ≈ −z and f′ ≈ −1, so the first step lands near 0 (median |z₁| = 0.26 over the failed pixels), where f′(0) = 0; the next step is a large jump (from −2.700 + 0.021i the iterates are 0.267, −3.133, 0.188, −4.720, 0.050, −18.35 + 4.54i, …) and the value finally overflows. The failed pixels are therefore not a large half-plane (the 97.1 % of the points with Re z₀ < −2 converge), but the strip next to the negative real axis. Only 2.2 % of the failed pixels have a first iterate within 0.1 of 0.
+   - *Where Newton does not converge (sin z).* Newton has no failed pixels: the 200 non-converged pixels (0.02 %) lie in the columns of the grid next to Re z₀ = ±π/2 and ±3π/2 (Re z₀ = ±1.557, ±1.567, ±1.577, ±4.53 to ±4.72), that is, next to cos z = 0, where f′ is small and the step is large; after 50 iterations their median |z| is 43.6 and their median Re z is 0 (far from the roots, near the imaginary axis). They are not exactly on the lines cos z = 0: the grid has no column at π/2.
+   - *Unlisted roots.* On sin z every root is listed (reference root = nearest kπ), and no point converges to an unlisted root. On eᶻ−z, 0.01 % of the points with Newton (118 pixels) end with |f(z)| < 1e-10 without being within 1e-10 of a root with |k| ≤ 20 (presumably roots with |k| > 20, which was not checked).
+   - *Limitations.* Two functions, one window and one grid resolution each. The roots of eᶻ−z with |k| ≤ 20 are listed asymmetrically (k = −20 to 20), so the conjugate of the root with k = 20 is not in the list. The maps are dominated by vertical bands (sin z) and by two half-planes (eᶻ−z) with small islands, and the boundary fractions are small; no ranking of the methods by boundary is claimed from them.
+
+   ![Basins of sin z with the five methods](figures/e10_sin_z.png)
+
+   *Basins of sin z on [−5, 5]², N = 1000, tol = 1e-10, from left to right: Newton, Halley, damped Newton, secant and Müller, with a common `iter_ref`. Colours: one for each root kπ with k = −2, −1, 0, 1, 2 and one for all the others (|k| ≥ 3); brightness drops with the iterations; black = not converged or failed.*
+
+   ![Basins of e^z−z with the five methods](figures/e10_exp_z_minus_z.png)
+
+   *Basins of eᶻ−z on [−3, 3]², N = 1000, tol = 1e-10, same layout and `iter_ref` convention. Colours: red for the root 0.3181−1.3372i, green for 0.3181+1.3372i and blue for any other listed root (|k| ≤ 20); black = not converged, failed or converged to an unlisted root.*
 
 ## Conventions and parameters
 
