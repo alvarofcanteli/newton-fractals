@@ -35,6 +35,7 @@ To answer it, we compare the effect of the method, the polynomial, the damping a
 | E7 | Effect of precision: complex64 versus complex128 (Müller with δ = 1e-2, secant with δ = 1e-3) | `experiments/e7_precision.py` |
 | E7b | Müller in E7: effect of δ (sweep over 1e-1, 1e-2 and 1e-3) and distance of the differing pixels to the boundaries (generates `results/e7b_muller_delta.csv` and `figures/e7_diff_muller.png`) | `experiments/e7b_muller_delta.py` |
 | E8 | Boundary of the basins of the five methods on z³−1 and z³−2z+2 at N = 250, 500, 1000 and 2000: boundary pixels, fraction, and slope of log(boundary pixels) against log(N) as a rough box-counting dimension (generates `results/e8_boundary.csv`, `results/e8_boundary_slope.csv` and `figures/e8_boundary.png`) | `experiments/e8_boundary.py` |
+| E9 | Five methods on three more polynomials: z⁸−1, (z−1)(z+1)(z−1.01) (two close roots) and a degree-5 polynomial with random roots (`np.random.default_rng(2026)`, roots saved in the CSV); includes the boundary fraction (generates `results/e9_new_polynomials.csv` and `figures/e9_*.png`) | `experiments/e9_new_polynomials.py` |
 
 ## Installation and usage
 
@@ -69,6 +70,7 @@ python experiments/e6_damped.py
 python experiments/e7_precision.py
 python experiments/e7b_muller_delta.py
 python experiments/e8_boundary.py
+python experiments/e9_new_polynomials.py
 ```
 
 > **Note:** `results/` and `figures/` are already in the repository, so there is no need to re-run
@@ -84,7 +86,7 @@ src/nfractals/
     plotting.py       basin maps (hue = root, brightness = iterations)
     metrics.py        boundary of the basins (boundary_mask, boundary_fraction; used by E6 and E8)
     convergence.py    scalar mpmath versions to measure orders of convergence
-experiments/          one script per experiment (E0 to E8) and the diagnostic ones (E3b, E5b, E5c, E7b)
+experiments/          one script per experiment (E0 to E9) and the diagnostic ones (E3b, E5b, E5c, E7b)
 tests/                validation tests (pytest)
 results/              CSV tables of the experiments
 figures/              generated figures
@@ -115,7 +117,7 @@ fractal, with islands of another colour. The secant method shows wide fractal ba
 boundaries, with black zones (not converged), mostly near the centre. Müller's boundaries appear
 almost straight, with three sectors. E8 measures this at N = 1000 (boundary pixels as a % of the grid):
 secant 4.205 %, Newton 3.450 %, damped Newton 2.413 %, Halley 0.860 % and Müller 0.470 %. Halley's
-boundary is therefore about four times shorter than Newton's, and Müller's grows almost linearly with
+boundary on z³−1 is therefore about four times shorter than Newton's, and Müller's grows almost linearly with
 N (slope 1.00), like a smooth curve; the figure alone does not show how many islands each method has,
 and E8 does not count them.*
 
@@ -150,6 +152,16 @@ small black spot next to the real axis. Müller's boundaries appear smoother and
 ![Boundary fraction against N](figures/e8_boundary.png)
 
 *Boundary fraction (% of the pixels of the grid) against N on z³−1 (left) and z³−2z+2 (right), window [−2, 2]², tol = 1e-10, `max_iter` 50 (Newton, Halley), 200 (damped Newton, h = 0.7) and 100 (secant, Müller), δ = 1e-3. One line per method (legend); the boundary is the set of converged pixels with a converged neighbour of another root.*
+8. **More polynomials (E9, `results/e9_new_polynomials.csv`; N = 1000, tol = 1e-10, δ = 1e-3, same `max_iter` as E5):**
+   - *z⁸−1:* % converged Newton 93.60, Halley 100.00, damped Newton 99.78, secant 70.75 (20.48 % not converged, 8.77 % failed), Müller 98.13. The secant method keeps degrading with the degree (94.74 % on z³−1, 79.64 % on z⁴−1, 77.46 % on z⁵−1, 74.05 % on z⁶−1, 70.75 % on z⁸−1). Boundary fraction (%): Newton 12.562, Halley 2.802, damped Newton 14.169, Müller 5.711 and secant 1.850. The secant value is given with its 70.75 % converged: non-converged pixels are not counted as boundary, so its large black zone makes the boundary look short and the figure is not comparable with the others.
+   - *(z−1)(z+1)(z−1.01):* every method converges at 99.98 % or more (secant 99.98 %). Boundary fraction (%): Newton 0.845, Halley 0.908, damped Newton 0.681, secant 1.289 (99.98 % converged), Müller 0.713. The basin shares of the close roots (1 and 1.01) depend on the method: root 1 takes 53.03 % with Newton and 32.38 % with Müller.
+   - *Random degree-5 polynomial* (roots in `results/e9_new_polynomials.csv`): 100 % converged for Newton, Halley, damped Newton and Müller, 97.59 % for the secant method. Boundary fraction (%): Newton 3.582, Halley 2.826, damped Newton 2.391, secant 3.818 (97.59 % converged; its 2.41 % non-converged pixels are not counted as boundary), Müller 1.336. Mean evaluations: Müller 12.742, secant 14.232, Halley 16.178, Newton 17.845, damped Newton 47.146.
+   - *Which method has the shortest boundary depends on the polynomial* (N = 1000, one grid resolution; excluding the secant method, whose boundary is understated because of its non-converged zone): Müller on z³−1 and on the random polynomial, Halley on z⁸−1 and damped Newton on (z−1)(z+1)(z−1.01). In particular, Halley's boundary is not the shortest in general: on (z−1)(z+1)(z−1.01) it is 0.908 %, above Newton's 0.845 %.
+   - *Observations on Müller (not explained).* On z⁸−1 its basins are not symmetric, unlike those of the other four methods: root 1 takes 18.09 % of the pixels, roots ±i 14.57 %, and roots −1 and the four diagonal ones between 9.35 % and 11.41 %. On (z−1)(z+1)(z−1.01) its map shows a straight vertical boundary between the basins of −1 and the other two roots (`figures/e9_close_roots.png`), unlike the other methods. A likely cause is that δ in the initial points `(z₀, z₀ + δ, z₀ + 2δ)` is real, so the three starting points lie on a horizontal line and break the symmetry of the problem, but this was not tested (for instance with a δ in another direction).
+
+   ![Basins of z⁸−1 with the five methods](figures/e9_z8_minus_1.png)
+
+   *Basins of z⁸−1 on [−2, 2]², N = 1000, tol = 1e-10, from left to right: Newton, Halley, damped Newton, secant and Müller, with a common `iter_ref`. One colour per root, brightness drops with the iterations, black = not converged or failed. Figures `figures/e9_close_roots.png` and `figures/e9_random_deg5.png` use the same layout.*
 
 ## Conventions and parameters
 

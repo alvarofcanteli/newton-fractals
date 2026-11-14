@@ -69,3 +69,14 @@ def test_unique_roots_keeps_order_of_first_appearance():
 def test_unique_roots_respects_tol_argument():
     assert len(unique_roots([0, 0.5])) == 2
     assert len(unique_roots([0, 0.5], tol=1)) == 1
+
+
+def test_random_poly_is_reproducible_and_in_range():
+    from nfractals.polynomials import random_poly
+
+    c1, r1 = random_poly()
+    c2, r2 = random_poly()
+    assert np.array_equal(c1, c2) and np.array_equal(r1, r2)
+    assert len(c1) == 6 and c1[0] == 1
+    assert np.all((np.abs(r1) >= 0.3) & (np.abs(r1) < 1.5))
+    assert np.allclose(np.sort_complex(np.roots(c1)), np.sort_complex(r1))

@@ -11,7 +11,7 @@ Numerical Methods final project (IE University): "Newton fractals: basins of att
 of rootfinding methods". Methods: Newton, Halley, damped Newton, secant and Müller.
 
 - `src/nfractals/`: the package (`methods.py`, `runner.py`, `polynomials.py`, `plotting.py`, `metrics.py`, `convergence.py`).
-- `experiments/`: one script per experiment, E0–E8, plus the diagnostic scripts E3b, E5b, E5c and E7b.
+- `experiments/`: one script per experiment, E0–E9, plus the diagnostic scripts E3b, E5b, E5c and E7b.
 - `results/`: CSV output of the experiments. `figures/`: generated figures.
 - `tests/`: pytest validation tests. Install with `pip install -e .`.
 

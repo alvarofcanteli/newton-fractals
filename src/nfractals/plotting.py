@@ -14,6 +14,9 @@ POLY_LATEX = {
     "z^4 - 1": r"$z^4-1$",
     "z^5 - 1": r"$z^5-1$",
     "z^6 - 1": r"$z^6-1$",
+    "z^8 - 1": r"$z^8-1$",
+    "(z-1)(z+1)(z-1.01)": r"$(z-1)(z+1)(z-1.01)$",
+    "random degree 5": "random degree-5 polynomial (seed 2026)",
 }
 
 
