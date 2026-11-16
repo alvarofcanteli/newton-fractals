@@ -48,14 +48,19 @@ for dt in (np.complex64, np.complex128):
           "tol is well above that floor (so that rounding noise is not reported as 'not converged') "
           "and well below the distance between roots (O(1)).")
 
-coef = POLYNOMIALS["z^3 - 1"]
-systems = {}
-for dt in (np.complex64, np.complex128):
-    f, df, d2f, r = make_polynomial(coef, dtype=dt)
-    systems[dt] = (f, df, d2f, unique_roots(r))
+POLYS = ["z^3 - 1", "z^3 - 2z + 2", "z^6 - 1", "random degree 5"]
 
 
-def methods_for(dt):
+def systems_for(poly_name):
+    coef = POLYNOMIALS[poly_name]
+    systems = {}
+    for dt in (np.complex64, np.complex128):
+        f, df, d2f, r = make_polynomial(coef, dtype=dt)
+        systems[dt] = (f, df, d2f, unique_roots(r))
+    return systems
+
+
+def methods_for(systems, dt):
     f, df, d2f, _ = systems[dt]
     z0 = grids[dt]
     # (name, step, max_iter, initial state)
@@ -84,8 +89,21 @@ def near_other_root(root, ok, radius):
     return near
 
 
+def within_radius(mask, radius):
+    """Pixels within Chebyshev distance <= radius of some True pixel of `mask` (the pixel itself
+    included, which does not matter for the use below: the pixels asked about are not in `mask`)."""
+    h, w = mask.shape
+    out = np.zeros(mask.shape, dtype=bool)
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            a = (slice(max(0, dy), h + min(0, dy)), slice(max(0, dx), w + min(0, dx)))
+            b = (slice(max(0, -dy), h + min(0, -dy)), slice(max(0, -dx), w + min(0, -dx)))
+            out[a] |= mask[b]
+    return out
+
+
 columns = [
-    "method", "max_iter", "delta", "tol complex64", "tol complex128",
+    "polynomial", "method", "max_iter", "delta", "tol complex64", "tol complex128",
     "root differs (% of all)", "root differs (% of those converged in both)",
     "converged only in complex64 (%)", "converged only in complex128 (%)",
     "mean iter complex64", "mean iter complex128",
@@ -93,61 +111,90 @@ columns = [
     "near boundary: % of those that differ in root",
     "near boundary: % of those that differ in anything",
 ]
+summary_columns = [
+    "polynomial", "method", "root differs (% of all)", "root differs (pixels)",
+    "converged in only one precision (% of all)", "converged in only one precision (pixels)",
+    "near boundary: % of all pixels",
+    "near boundary: % of those that differ in root",
+    "near boundary: % of those that differ in anything",
+    # Counts (pixels). Boundary: `near_other_root` with radius BOUNDARY_RADIUS, i.e. a converged pixel
+    # within 3 px (Chebyshev) of a converged pixel with a different root.
+    "n_both_converged_changed",             # converged in both precisions with a different root
+    "n_both_converged_changed_boundary",    # of those, boundary in the complex128 map (E7 definition)
+    "n_single_precision",                   # converged in only one precision
+    "n_single_precision_boundary_b",        # of those, boundary in the complex64 or the complex128 map
+    "n_single_precision_near_nonconv_3px",  # of those, within 3 px of a pixel that converged in neither precision
+]
 rows = []
-res = {dt: [run_basins(grids[dt], step, systems[dt][3], TOL[dt], mi, init=init)
-            for _, step, mi, init in methods_for(dt)]
-       for dt in (np.complex64, np.complex128)}
+summary_rows = []
 
-print("\nResults (z^3 - 1, N = 1000, same starting points):")
-for i, (name, _, max_iter, _) in enumerate(methods_for(np.complex128)):
-    root64, it64, st64 = res[np.complex64][i]
-    root128, it128, st128 = res[np.complex128][i]
-    c64, c128 = st64 == CONVERGED, st128 == CONVERGED
-    both = c64 & c128
-    diff_root = both & (root64 != root128)
-    only64, only128 = c64 & ~c128, c128 & ~c64
-    diff_any = diff_root | only64 | only128
+for poly_name in POLYS:
+    systems = systems_for(poly_name)
+    res = {dt: [run_basins(grids[dt], step, systems[dt][3], TOL[dt], mi, init=init)
+                for _, step, mi, init in methods_for(systems, dt)]
+           for dt in (np.complex64, np.complex128)}
 
-    boundary = near_other_root(root128, c128, BOUNDARY_RADIUS)
-    p_bd_all = 100 * boundary.mean()
-    p_bd_root = 100 * boundary[diff_root].mean() if diff_root.any() else float("nan")
-    p_bd_any = 100 * boundary[diff_any].mean() if diff_any.any() else float("nan")
+    print(f"\nResults ({poly_name}, N = 1000, same starting points):")
+    for i, (name, _, max_iter, _) in enumerate(methods_for(systems, np.complex128)):
+        root64, it64, st64 = res[np.complex64][i]
+        root128, it128, st128 = res[np.complex128][i]
+        c64, c128 = st64 == CONVERGED, st128 == CONVERGED
+        both = c64 & c128
+        diff_root = both & (root64 != root128)
+        only64, only128 = c64 & ~c128, c128 & ~c64
+        diff_any = diff_root | only64 | only128
 
-    p_diff_all = 100 * diff_root.mean()
-    p_diff_both = 100 * diff_root.sum() / both.sum()
-    i64, i128 = float(it64[c64].mean()), float(it128[c128].mean())
-    delta = {"Secant": DELTA_SECANT, "Müller": DELTA_MULLER}.get(name, "")
-    rows.append([name, max_iter, delta, TOL[np.complex64], TOL[np.complex128],
-                 round(p_diff_all, 5), round(p_diff_both, 5),
-                 round(100 * only64.mean(), 5), round(100 * only128.mean(), 5),
-                 round(i64, 3), round(i128, 3), round(p_bd_all, 4),
-                 round(p_bd_root, 4), round(p_bd_any, 4)])
-    print(f"- {name} (max_iter={max_iter}): root differs in {p_diff_all:.4f}% of the pixels "
-          f"({diff_root.sum()} pixels; {p_diff_both:.4f}% of those converged in both); "
-          f"converged only in complex64 {100 * only64.mean():.4f}% ({only64.sum()}), "
-          f"only in complex128 {100 * only128.mean():.4f}% ({only128.sum()}); "
-          f"mean iter complex64 {i64:.3f}, complex128 {i128:.3f}; "
-          f"near the boundary (≤{BOUNDARY_RADIUS} px): {p_bd_root:.2f}% of those that differ in root, "
-          f"{p_bd_any:.2f}% of those that differ in anything, versus {p_bd_all:.2f}% of all pixels",
-          flush=True)
+        boundary = near_other_root(root128, c128, BOUNDARY_RADIUS)
+        # Counts for the summary: pixels converged in only one precision, boundary criterion (b)
+        # (boundary in either map) and proximity to the pixels that converged in neither precision.
+        single = only64 | only128
+        boundary_either = boundary | near_other_root(root64, c64, BOUNDARY_RADIUS)
+        near_nonconv = within_radius(~c64 & ~c128, BOUNDARY_RADIUS)
+        p_bd_all = 100 * boundary.mean()
+        p_bd_root = 100 * boundary[diff_root].mean() if diff_root.any() else float("nan")
+        p_bd_any = 100 * boundary[diff_any].mean() if diff_any.any() else float("nan")
 
-    if name == "Newton":
-        pixel_map = np.zeros(root128.shape, dtype=np.uint8)  # 0 background, 1 near boundary,
-        pixel_map[boundary] = 1                              # 2 different root, 3 only in one
-        pixel_map[only64 | only128] = 3
-        pixel_map[diff_root] = 2
-        fig, ax = plt.subplots(figsize=(9, 9), constrained_layout=True)
-        ax.imshow(pixel_map, origin="lower", interpolation="nearest",
-                  cmap=ListedColormap(["white", "#dddddd", "#d62728", "#1f77b4"]), vmin=0, vmax=3)
-        ax.set_axis_off()
-        ax.set_title(f"Newton, {poly_latex('z^3 - 1')}: complex64 vs complex128 ({diff_root.sum()} pixels with a different root, "
-                     f"{(only64 | only128).sum()} converged in only one)\n"
-                     f"grey: within {BOUNDARY_RADIUS} px of another root; red: different root; "
-                     "blue: converges in only one",
-                     fontsize=10)
-        output_fig = PROJECT_ROOT / "figures" / "e7_diff_newton.png"
-        fig.savefig(output_fig, dpi=110, bbox_inches="tight")
-        plt.close(fig)
+        p_diff_all = 100 * diff_root.mean()
+        p_diff_both = 100 * diff_root.sum() / both.sum()
+        i64, i128 = float(it64[c64].mean()), float(it128[c128].mean())
+        delta = {"Secant": DELTA_SECANT, "Müller": DELTA_MULLER}.get(name, "")
+        rows.append([poly_name, name, max_iter, delta, TOL[np.complex64], TOL[np.complex128],
+                     round(p_diff_all, 5), round(p_diff_both, 5),
+                     round(100 * only64.mean(), 5), round(100 * only128.mean(), 5),
+                     round(i64, 3), round(i128, 3), round(p_bd_all, 4),
+                     round(p_bd_root, 4), round(p_bd_any, 4)])
+        summary_rows.append([poly_name, name, round(p_diff_all, 5), int(diff_root.sum()),
+                             round(100 * (only64 | only128).mean(), 5), int((only64 | only128).sum()),
+                             round(p_bd_all, 4), round(p_bd_root, 4), round(p_bd_any, 4),
+                             int(diff_root.sum()), int(boundary[diff_root].sum()),
+                             int(single.sum()), int(boundary_either[single].sum()),
+                             int(near_nonconv[single].sum())])
+        print(f"- {name} (max_iter={max_iter}): root differs in {p_diff_all:.4f}% of the pixels "
+              f"({diff_root.sum()} pixels; {p_diff_both:.4f}% of those converged in both); "
+              f"converged only in complex64 {100 * only64.mean():.4f}% ({only64.sum()}), "
+              f"only in complex128 {100 * only128.mean():.4f}% ({only128.sum()}); "
+              f"mean iter complex64 {i64:.3f}, complex128 {i128:.3f}; "
+              f"near the boundary (≤{BOUNDARY_RADIUS} px): {p_bd_root:.2f}% of those that differ in root, "
+              f"{p_bd_any:.2f}% of those that differ in anything, versus {p_bd_all:.2f}% of all pixels",
+              flush=True)
+
+        if name == "Newton" and poly_name == "z^3 - 1":  # the only figure of E7
+            pixel_map = np.zeros(root128.shape, dtype=np.uint8)  # 0 background, 1 near boundary,
+            pixel_map[boundary] = 1                              # 2 different root, 3 only in one
+            pixel_map[only64 | only128] = 3
+            pixel_map[diff_root] = 2
+            fig, ax = plt.subplots(figsize=(9, 9), constrained_layout=True)
+            ax.imshow(pixel_map, origin="lower", interpolation="nearest",
+                      cmap=ListedColormap(["white", "#dddddd", "#d62728", "#1f77b4"]), vmin=0, vmax=3)
+            ax.set_axis_off()
+            ax.set_title(f"Newton, {poly_latex('z^3 - 1')}: complex64 vs complex128 ({diff_root.sum()} pixels with a different root, "
+                         f"{(only64 | only128).sum()} converged in only one)\n"
+                         f"grey: within {BOUNDARY_RADIUS} px of another root; red: different root; "
+                         "blue: converges in only one",
+                         fontsize=10)
+            output_fig = PROJECT_ROOT / "figures" / "e7_diff_newton.png"
+            fig.savefig(output_fig, dpi=110, bbox_inches="tight")
+            plt.close(fig)
 
 output = PROJECT_ROOT / "results" / "e7_precision.csv"
 with open(output, "w", newline="", encoding="utf-8") as fh:
@@ -155,3 +202,9 @@ with open(output, "w", newline="", encoding="utf-8") as fh:
     w.writerow(columns)
     w.writerows(rows)
 print(f"\nTable saved to {output}")
+output_summary = PROJECT_ROOT / "results" / "e7_summary.csv"
+with open(output_summary, "w", newline="", encoding="utf-8") as fh:
+    w = csv.writer(fh)
+    w.writerow(summary_columns)
+    w.writerows(summary_rows)
+print(f"Summary saved to {output_summary}")

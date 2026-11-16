@@ -1,0 +1,21 @@
+polynomial,method,root differs (% of all),root differs (pixels),converged in only one precision (% of all),converged in only one precision (pixels),near boundary: % of all pixels,near boundary: % of those that differ in root,near boundary: % of those that differ in anything,n_both_converged_changed,n_both_converged_changed_boundary,n_single_precision,n_single_precision_boundary_b,n_single_precision_near_nonconv_3px
+z^3 - 1,Newton,0.0026,26,0.0,0,8.1578,100.0,100.0,26,26,0,0,0
+z^3 - 1,Halley,0.0,0,0.0,0,2.78,nan,nan,0,0,0,0,0
+z^3 - 1,Damped Newton (h=0.7),0.001,10,0.0,0,6.0732,100.0,100.0,10,10,0,0,0
+z^3 - 1,Secant,0.155,1550,0.0992,992,9.2178,100.0,79.465,1550,1550,992,984,978
+z^3 - 1,Müller,0.0548,548,0.0,0,1.9426,99.635,99.635,548,546,0,0,0
+z^3 - 2z + 2,Newton,0.001,10,0.0006,6,7.2582,100.0,75.0,10,10,6,6,0
+z^3 - 2z + 2,Halley,0.0002,2,0.0,0,3.3214,100.0,100.0,2,2,0,0,0
+z^3 - 2z + 2,Damped Newton (h=0.7),0.0002,2,0.0,0,5.064,100.0,100.0,2,2,0,0,0
+z^3 - 2z + 2,Secant,0.098,980,0.0054,54,8.7102,100.0,94.971,980,980,54,48,42
+z^3 - 2z + 2,Müller,0.0606,606,0.0,0,1.6298,99.67,99.67,606,604,0,0,0
+z^6 - 1,Newton,0.0272,272,0.152,1520,23.7328,100.0,25.0,272,272,1520,1428,1416
+z^6 - 1,Halley,0.0016,16,0.0,0,6.6684,100.0,100.0,16,16,0,0,0
+z^6 - 1,Damped Newton (h=0.7),0.0548,548,0.0444,444,19.9808,100.0,99.1935,548,548,444,444,108
+z^6 - 1,Secant,0.1152,1152,0.578,5780,6.8084,99.4792,55.1933,1152,1146,5780,5586,5780
+z^6 - 1,Müller,0.3304,3304,0.2734,2734,8.2106,100.0,56.1775,3304,3304,2734,2734,2660
+random degree 5,Newton,0.0013,13,0.0,0,9.0742,100.0,100.0,13,13,0,0,0
+random degree 5,Halley,0.001,10,0.0,0,7.5114,100.0,100.0,10,10,0,0,0
+random degree 5,Damped Newton (h=0.7),0.0008,8,0.0,0,6.521,100.0,100.0,8,8,0,0,0
+random degree 5,Secant,0.1071,1071,0.0686,686,9.3284,100.0,80.0228,1071,1071,686,681,626
+random degree 5,Müller,0.0998,998,0.0,0,4.9562,98.1964,98.1964,998,980,0,0,0
